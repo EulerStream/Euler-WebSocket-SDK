@@ -34,3 +34,21 @@ Join the [EulerStream discord](https://www.eulerstream.com/discord) for question
 1. Provides importable TypeScript types for all NodeJS library schemas
 2. Provides `createWebSocketURL` for creating a WebSocket URL for a given account
 3. Provides utility functions for encoding & decoding protobuf messages
+4. Close codes for WebSocket connections
+
+## WebSocket Close Codes
+
+```ts
+export enum ClientCloseCode {
+
+  // Standard Codes
+  INTERNAL_SERVER_ERROR = 1011,
+  NORMAL = 1000,
+
+  // Custom Codes (Must be 4000 to 4999)
+  TIKTOK_CLOSED_CONNECTION = 4500,
+  TOO_MANY_CONNECTIONS = 4429,
+  INVALID_OPTIONS = 4401,
+  NOT_LIVE = 4404,
+  STREAM_END = 4005
+}```
