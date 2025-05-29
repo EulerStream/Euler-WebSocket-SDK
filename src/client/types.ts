@@ -32,8 +32,9 @@ export const WebSocketOptionsSchema = z.object({
   features: WebSocketFeatureFlags.default({})
 });
 
-export type WebSocketOptions = z.infer<typeof WebSocketOptionsSchema>;
+type BaseWebSocketOptions = z.infer<typeof WebSocketOptionsSchema>;
 export type WebSocketFeatureFlags = z.infer<typeof WebSocketFeatureFlags>;
+export type WebSocketOptions = Omit<BaseWebSocketOptions, 'features'> & { features?: Partial<WebSocketFeatureFlags> };
 
 export type ClientMessageBundle = {
   timestamp: number,

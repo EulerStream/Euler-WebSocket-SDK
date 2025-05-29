@@ -37,3 +37,4 @@ export function createWebSocketUrl(options: WebSocketOptions): string {
   const queryString = new URLSearchParams(flatParams).toString();
   return `${BASE_URL}?${queryString}`;
 }
+
