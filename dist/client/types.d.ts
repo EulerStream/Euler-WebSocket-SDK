@@ -13,11 +13,11 @@ export declare const WebSocketFeatureFlags: z.ZodObject<{
     bundleEvents: z.ZodDefault<z.ZodEffects<z.ZodEnum<["true", "false", "1", "0"]>, boolean, "0" | "1" | "false" | "true">>;
     rawMessages: z.ZodDefault<z.ZodEffects<z.ZodEnum<["true", "false", "1", "0"]>, boolean, "0" | "1" | "false" | "true">>;
 }, "strip", z.ZodTypeAny, {
-    bundleEvents?: boolean;
-    rawMessages?: boolean;
+    bundleEvents: boolean;
+    rawMessages: boolean;
 }, {
-    bundleEvents?: "0" | "1" | "false" | "true";
-    rawMessages?: "0" | "1" | "false" | "true";
+    bundleEvents?: "0" | "1" | "false" | "true" | undefined;
+    rawMessages?: "0" | "1" | "false" | "true" | undefined;
 }>;
 export declare const WebSocketOptionsSchema: z.ZodObject<{
     uniqueId: z.ZodString;
@@ -28,30 +28,30 @@ export declare const WebSocketOptionsSchema: z.ZodObject<{
         bundleEvents: z.ZodDefault<z.ZodEffects<z.ZodEnum<["true", "false", "1", "0"]>, boolean, "0" | "1" | "false" | "true">>;
         rawMessages: z.ZodDefault<z.ZodEffects<z.ZodEnum<["true", "false", "1", "0"]>, boolean, "0" | "1" | "false" | "true">>;
     }, "strip", z.ZodTypeAny, {
-        bundleEvents?: boolean;
-        rawMessages?: boolean;
+        bundleEvents: boolean;
+        rawMessages: boolean;
     }, {
-        bundleEvents?: "0" | "1" | "false" | "true";
-        rawMessages?: "0" | "1" | "false" | "true";
+        bundleEvents?: "0" | "1" | "false" | "true" | undefined;
+        rawMessages?: "0" | "1" | "false" | "true" | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
-    uniqueId?: string;
-    jwtKey?: string;
-    apiKey?: string;
-    schemaVersion?: SchemaVersion;
-    features?: {
-        bundleEvents?: boolean;
-        rawMessages?: boolean;
+    uniqueId: string;
+    schemaVersion: SchemaVersion;
+    features: {
+        bundleEvents: boolean;
+        rawMessages: boolean;
     };
+    jwtKey?: string | null | undefined;
+    apiKey?: string | null | undefined;
 }, {
-    uniqueId?: string;
-    jwtKey?: string;
-    apiKey?: string;
-    schemaVersion?: SchemaVersion;
+    uniqueId: string;
+    jwtKey?: string | null | undefined;
+    apiKey?: string | null | undefined;
+    schemaVersion?: SchemaVersion | undefined;
     features?: {
-        bundleEvents?: "0" | "1" | "false" | "true";
-        rawMessages?: "0" | "1" | "false" | "true";
-    };
+        bundleEvents?: "0" | "1" | "false" | "true" | undefined;
+        rawMessages?: "0" | "1" | "false" | "true" | undefined;
+    } | undefined;
 }>;
 export type WebSocketOptions = z.infer<typeof WebSocketOptionsSchema>;
 export type WebSocketFeatureFlags = z.infer<typeof WebSocketFeatureFlags>;

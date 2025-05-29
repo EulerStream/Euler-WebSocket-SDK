@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {DecodedData, SchemaVersion} from "@/webcast";
+import {DecodedData, SchemaVersion} from "../webcast";
 
 export enum ClientCloseCode {
 

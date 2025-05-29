@@ -1,6 +1,6 @@
 import * as tiktokSchema from "../webcast/schemas/tiktok-schema-v2";
-import { CommonMessageData, MessageFns, ProtoMessageFetchResult, WebcastPushFrame } from "../webcast/schemas/tiktok-schema-v2";
-import { SchemaVersion } from "../webcast/schemas";
+import { MessageFns, ProtoMessageFetchResult, WebcastPushFrame } from "./schemas/tiktok-schema-v2";
+import { SchemaVersion } from "./schemas";
 /** FUNCTION: Extract type T from MessageFns<T> **/
 type ExtractType<T> = T extends MessageFns<infer U> ? U : never;
 /** FUNCTION: Strips the 'Decoder' suffix from a string **/
@@ -8,7 +8,7 @@ type StripDecoderSuffix<T> = T extends `${infer Name}Decoder` ? Name : never;
 /** FUNCTION: Extract only those message types that have a 'common' property **/
 type FilterMessagesWithCommon<T> = {
     [K in keyof T]: T[K] extends {
-        common: CommonMessageData;
+        common: any;
     } ? K : never;
 }[keyof T];
 /** MAP: Property names in tiktokSchema file to types **/

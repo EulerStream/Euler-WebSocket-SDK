@@ -1,4 +1,4 @@
-import {WebSocketOptions} from "@/client/index";
+import {WebSocketOptions} from "./types";
 
 const isNode = typeof process !== "undefined" && process?.env != null;
 

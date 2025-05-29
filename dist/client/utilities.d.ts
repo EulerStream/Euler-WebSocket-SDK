@@ -1,4 +1,4 @@
-import { WebSocketOptions } from "../client/index";
+import { WebSocketOptions } from "./types";
 export declare const BASE_URL: string;
 /**
  * Creates a WebSocket URL with query parameters based on the provided options.

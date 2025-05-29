@@ -1,12 +1,12 @@
-import * as tiktokSchema from "@/webcast/schemas/tiktok-schema-v2";
+import * as tiktokSchema from "../webcast/schemas/tiktok-schema-v2";
 import {
-  CommonMessageData,
   MessageFns,
   ProtoMessageFetchResult,
   WebcastPushFrame,
   WebcastPushFrameDecoder
-} from "@/webcast/schemas/tiktok-schema-v2";
-import {SchemaVersion, WebcastSchemas} from "@/webcast/schemas";
+} from "./schemas/tiktok-schema-v2";
+import {SchemaVersion, WebcastSchemas} from "./schemas";
+
 
 /** FUNCTION: Extract type T from MessageFns<T> **/
 type ExtractType<T> = T extends MessageFns<infer U> ? U : never;
@@ -15,7 +15,7 @@ type ExtractType<T> = T extends MessageFns<infer U> ? U : never;
 type StripDecoderSuffix<T> = T extends `${infer Name}Decoder` ? Name : never;
 
 /** FUNCTION: Extract only those message types that have a 'common' property **/
-type FilterMessagesWithCommon<T> = { [K in keyof T]: T[K] extends { common: CommonMessageData } ? K : never }[keyof T];
+type FilterMessagesWithCommon<T> = { [K in keyof T]: T[K] extends { common: any } ? K : never }[keyof T];
 
 /** MAP: Property names in tiktokSchema file to types **/
 type TikTokSchema = typeof tiktokSchema;
@@ -108,7 +108,7 @@ function deserializeProtoMessageFetchResult(
   for (const message of protoMessageFetchResult.messages || []) {
 
     // Skip it if it's not in the schema
-    if (!selectedSchema[`${message.type}Decoder`]) {
+    if (!selectedSchema[`${message.type}Decoder` as keyof typeof selectedSchema]) {
       continue;
     }
 
@@ -146,7 +146,7 @@ export function deserializeMessage<T extends WebcastMessageName>(
 
   // Get the decoder name
   const decoderName: WebcastDecoderName = `${protoName}Decoder`;
-  const decoderFn: MessageFns<WebcastMessageMap[T]> = WebcastSchemas[protoVersion][decoderName];
+  const decoderFn = WebcastSchemas[protoVersion][decoderName as keyof typeof WebcastSchemas[SchemaVersion]] as MessageFns<WebcastMessageMap[T]>;
 
   if (!decoderFn) {
     throw new NoSchemaFoundError(`Invalid schema name: ${protoName}, not found in the Protobuf schema.`);

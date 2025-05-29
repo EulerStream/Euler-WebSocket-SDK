@@ -22,9 +22,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebcastSchemas = exports.SchemaVersion = void 0;
 const tikTokSchemaV2 = __importStar(require("./tiktok-schema-v2"));
@@ -38,6 +35,4 @@ exports.WebcastSchemas = {
     [SchemaVersion.v1]: tikTokSchemaV1,
     [SchemaVersion.v2]: tikTokSchemaV2
 };
-// Export v2, but not v1, as it's deprecated
-__exportStar(require("./tiktok-schema-v2"), exports);
 //# sourceMappingURL=index.js.map
