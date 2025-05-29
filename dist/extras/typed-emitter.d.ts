@@ -1,14 +1,5 @@
-/// <reference types="node" />
-/// <reference types="node" />
 import { WebcastEventName, WebcastMessageMap } from "../webcast";
 import EventEmitter from "eventemitter3";
-/** Basic WebSocket polyfill type for cross-compatibility **/
-type WebSocketPolyFillEvent = MessageEvent | {
-    data: string | Buffer | ArrayBuffer | ArrayBufferView;
-};
-type WebSocketPolyFill = {
-    onmessage: (event: WebSocketPolyFillEvent) => void;
-};
 /** An event-map type for the typed-emitter **/
 type WebcastEventMap = {
     [K in WebcastEventName]: (event: WebcastMessageMap[K]) => void;
@@ -22,6 +13,6 @@ export declare class WebcastEventEmitter extends EventEmitter<WebcastEventMap> {
  *
  * @param ws The WebSocket instance to pipe events from.
  */
-export declare function pipeEvents(ws: WebSocketPolyFill): WebcastEventEmitter;
+export declare function pipeEvents(ws: any): WebcastEventEmitter;
 export {};
 //# sourceMappingURL=typed-emitter.d.ts.map

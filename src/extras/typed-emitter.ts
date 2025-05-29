@@ -2,10 +2,6 @@ import {WebcastEventName, WebcastMessageMap} from "@/webcast";
 import EventEmitter from "eventemitter3";
 import {ClientMessageBundle} from "@/client";
 
-/** Basic WebSocket polyfill type for cross-compatibility **/
-type WebSocketPolyFillEvent = MessageEvent | { data: string | Buffer | ArrayBuffer | ArrayBufferView };
-type WebSocketPolyFill = { onmessage: (event: WebSocketPolyFillEvent) => void; };
-
 /** An event-map type for the typed-emitter **/
 type WebcastEventMap = { [K in WebcastEventName]: (event: WebcastMessageMap[K]) => void; }
 
@@ -31,10 +27,10 @@ function isArrayBufferView(data: any): data is ArrayBufferView {
  *
  * @param ws The WebSocket instance to pipe events from.
  */
-export function pipeEvents(ws: WebSocketPolyFill): WebcastEventEmitter {
+export function pipeEvents(ws: any): WebcastEventEmitter {
   const emitter = new WebcastEventEmitter();
 
-  ws.onmessage = (event: WebSocketPolyFillEvent) => {
+  ws.onmessage = (event: any) => {
     let data: string;
 
     if (typeof event.data === 'string') {
