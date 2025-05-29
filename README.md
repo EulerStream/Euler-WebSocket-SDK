@@ -1,4 +1,4 @@
-# EulerStream API SDK
+# EulerStream WebSocket SDK
 
 This is an SDK for the Euler Stream WebSocket API written in TypeScript.
 
