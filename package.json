@@ -10,7 +10,7 @@
   "scripts": {
     "test": "tsx ./test/test.ts",
     "format": "prettier --write src/**/*.js",
-    "build": "tsc && cp ./src/extra.d.ts dist/"
+    "build": "tsc"
   },
   "repository": {
     "type": "git",

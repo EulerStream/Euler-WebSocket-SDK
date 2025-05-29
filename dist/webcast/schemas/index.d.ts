@@ -8,4 +8,5 @@ export declare const WebcastSchemas: {
     v1: typeof tikTokSchemaV1;
     v2: typeof tikTokSchemaV2;
 };
+export * from './tiktok-schema-v2';
 //# sourceMappingURL=index.d.ts.map

@@ -11,5 +11,5 @@ export const WebcastSchemas = {
   [SchemaVersion.v2]: tikTokSchemaV2
 }
 
-
+export * from './tiktok-schema-v2';
 
