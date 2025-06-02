@@ -1,6 +1,6 @@
 {
   "name": "@eulerstream/euler-websocket-sdk",
-  "version": "0.0.2",
+  "version": "0.0.3-beta2",
   "description": "Browser & Node.JS cross-compatible module for the Euler Stream WebSocket service.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
