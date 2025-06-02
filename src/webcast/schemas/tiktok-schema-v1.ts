@@ -6050,6 +6050,404 @@ export const WebcastWebsocketAckDecoder: MessageFns<WebcastWebsocketAck> = {
 	},
 };
 
+
+
+function createBaseWebcastBarrageMessage(): WebcastBarrageMessage {
+	return { event: undefined, msgType: 0, content: undefined };
+}
+
+export const WebcastBarrageMessageDecoder: MessageFns<WebcastBarrageMessage> = {
+	encode(message: WebcastBarrageMessage, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+		if (message.event !== undefined) {
+			WebcastMessageEventDecoder.encode(message.event, writer.uint32(10).fork()).join();
+		}
+		if (message.msgType !== 0) {
+			writer.uint32(24).int32(message.msgType);
+		}
+		if (message.content !== undefined) {
+			WebcastBarrageMessage_TextDecoder.encode(message.content, writer.uint32(42).fork()).join();
+		}
+		return writer;
+	},
+
+	decode(input: BinaryReader | Uint8Array, length?: number): WebcastBarrageMessage {
+		const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+		let end = length === undefined ? reader.len : reader.pos + length;
+		const message = createBaseWebcastBarrageMessage();
+		while (reader.pos < end) {
+			const tag = reader.uint32();
+			switch (tag >>> 3) {
+				case 1: {
+					if (tag !== 10) {
+						break;
+					}
+
+					message.event = WebcastMessageEventDecoder.decode(reader, reader.uint32());
+					continue;
+				}
+				case 3: {
+					if (tag !== 24) {
+						break;
+					}
+
+					message.msgType = reader.int32();
+					continue;
+				}
+				case 5: {
+					if (tag !== 42) {
+						break;
+					}
+
+					message.content = WebcastBarrageMessage_TextDecoder.decode(reader, reader.uint32());
+					continue;
+				}
+			}
+			if ((tag & 7) === 4 || tag === 0) {
+				break;
+			}
+			reader.skip(tag & 7);
+		}
+		return message;
+	},
+
+	fromJSON(object: any): WebcastBarrageMessage {
+		return {
+			event: isSet(object.event) ? WebcastMessageEventDecoder.fromJSON(object.event) : undefined,
+			msgType: isSet(object.msgType) ? globalThis.Number(object.msgType) : 0,
+			content: isSet(object.content) ? WebcastBarrageMessage_TextDecoder.fromJSON(object.content) : undefined,
+		};
+	},
+
+	toJSON(message: WebcastBarrageMessage): unknown {
+		const obj: any = {};
+		if (message.event !== undefined) {
+			obj.event = WebcastMessageEventDecoder.toJSON(message.event);
+		}
+		if (message.msgType !== 0) {
+			obj.msgType = Math.round(message.msgType);
+		}
+		if (message.content !== undefined) {
+			obj.content = WebcastBarrageMessage_TextDecoder.toJSON(message.content);
+		}
+		return obj;
+	},
+
+	create<I extends Exact<DeepPartial<WebcastBarrageMessage>, I>>(base?: I): WebcastBarrageMessage {
+		return WebcastBarrageMessageDecoder.fromPartial(base ?? ({} as any));
+	},
+	fromPartial<I extends Exact<DeepPartial<WebcastBarrageMessage>, I>>(object: I): WebcastBarrageMessage {
+		const message = createBaseWebcastBarrageMessage();
+		message.event = (object.event !== undefined && object.event !== null)
+				? WebcastMessageEventDecoder.fromPartial(object.event)
+				: undefined;
+		message.msgType = object.msgType ?? 0;
+		message.content = (object.content !== undefined && object.content !== null)
+				? WebcastBarrageMessage_TextDecoder.fromPartial(object.content)
+				: undefined;
+		return message;
+	},
+};
+
+function createBaseWebcastBarrageMessage_Text(): WebcastBarrageMessage_Text {
+	return { key: "", defaultPattern: "", pieces: [] };
+}
+
+export const WebcastBarrageMessage_TextDecoder: MessageFns<WebcastBarrageMessage_Text> = {
+	encode(message: WebcastBarrageMessage_Text, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+		if (message.key !== "") {
+			writer.uint32(10).string(message.key);
+		}
+		if (message.defaultPattern !== "") {
+			writer.uint32(18).string(message.defaultPattern);
+		}
+		for (const v of message.pieces) {
+			WebcastBarrageMessage_TextPieceDecoder.encode(v!, writer.uint32(34).fork()).join();
+		}
+		return writer;
+	},
+
+	decode(input: BinaryReader | Uint8Array, length?: number): WebcastBarrageMessage_Text {
+		const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+		let end = length === undefined ? reader.len : reader.pos + length;
+		const message = createBaseWebcastBarrageMessage_Text();
+		while (reader.pos < end) {
+			const tag = reader.uint32();
+			switch (tag >>> 3) {
+				case 1: {
+					if (tag !== 10) {
+						break;
+					}
+
+					message.key = reader.string();
+					continue;
+				}
+				case 2: {
+					if (tag !== 18) {
+						break;
+					}
+
+					message.defaultPattern = reader.string();
+					continue;
+				}
+				case 4: {
+					if (tag !== 34) {
+						break;
+					}
+
+					message.pieces.push(WebcastBarrageMessage_TextPieceDecoder.decode(reader, reader.uint32()));
+					continue;
+				}
+			}
+			if ((tag & 7) === 4 || tag === 0) {
+				break;
+			}
+			reader.skip(tag & 7);
+		}
+		return message;
+	},
+
+	fromJSON(object: any): WebcastBarrageMessage_Text {
+		return {
+			key: isSet(object.key) ? globalThis.String(object.key) : "",
+			defaultPattern: isSet(object.defaultPattern) ? globalThis.String(object.defaultPattern) : "",
+			pieces: globalThis.Array.isArray(object?.pieces)
+					? object.pieces.map((e: any) => WebcastBarrageMessage_TextPieceDecoder.fromJSON(e))
+					: [],
+		};
+	},
+
+	toJSON(message: WebcastBarrageMessage_Text): unknown {
+		const obj: any = {};
+		if (message.key !== "") {
+			obj.key = message.key;
+		}
+		if (message.defaultPattern !== "") {
+			obj.defaultPattern = message.defaultPattern;
+		}
+		if (message.pieces?.length) {
+			obj.pieces = message.pieces.map((e) => WebcastBarrageMessage_TextPieceDecoder.toJSON(e));
+		}
+		return obj;
+	},
+
+	create<I extends Exact<DeepPartial<WebcastBarrageMessage_Text>, I>>(base?: I): WebcastBarrageMessage_Text {
+		return WebcastBarrageMessage_TextDecoder.fromPartial(base ?? ({} as any));
+	},
+	fromPartial<I extends Exact<DeepPartial<WebcastBarrageMessage_Text>, I>>(
+			object: I,
+	): WebcastBarrageMessage_Text {
+		const message = createBaseWebcastBarrageMessage_Text();
+		message.key = object.key ?? "";
+		message.defaultPattern = object.defaultPattern ?? "";
+		message.pieces = object.pieces?.map((e) => WebcastBarrageMessage_TextPieceDecoder.fromPartial(e)) || [];
+		return message;
+	},
+};
+
+function createBaseWebcastBarrageMessage_TextPiece(): WebcastBarrageMessage_TextPiece {
+	return { type: 0, stringValue: "", userValue: undefined };
+}
+
+export const WebcastBarrageMessage_TextPieceDecoder: MessageFns<WebcastBarrageMessage_TextPiece> = {
+	encode(message: WebcastBarrageMessage_TextPiece, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+		if (message.type !== 0) {
+			writer.uint32(8).int32(message.type);
+		}
+		if (message.stringValue !== "") {
+			writer.uint32(90).string(message.stringValue);
+		}
+		if (message.userValue !== undefined) {
+			WebcastBarrageMessage_TextPieceUserDecoder.encode(message.userValue, writer.uint32(170).fork()).join();
+		}
+		return writer;
+	},
+
+	decode(input: BinaryReader | Uint8Array, length?: number): WebcastBarrageMessage_TextPiece {
+		const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+		let end = length === undefined ? reader.len : reader.pos + length;
+		const message = createBaseWebcastBarrageMessage_TextPiece();
+		while (reader.pos < end) {
+			const tag = reader.uint32();
+			switch (tag >>> 3) {
+				case 1: {
+					if (tag !== 8) {
+						break;
+					}
+
+					message.type = reader.int32();
+					continue;
+				}
+				case 11: {
+					if (tag !== 90) {
+						break;
+					}
+
+					message.stringValue = reader.string();
+					continue;
+				}
+				case 21: {
+					if (tag !== 170) {
+						break;
+					}
+
+					message.userValue = WebcastBarrageMessage_TextPieceUserDecoder.decode(reader, reader.uint32());
+					continue;
+				}
+			}
+			if ((tag & 7) === 4 || tag === 0) {
+				break;
+			}
+			reader.skip(tag & 7);
+		}
+		return message;
+	},
+
+	fromJSON(object: any): WebcastBarrageMessage_TextPiece {
+		return {
+			type: isSet(object.type) ? globalThis.Number(object.type) : 0,
+			stringValue: isSet(object.stringValue) ? globalThis.String(object.stringValue) : "",
+			userValue: isSet(object.userValue)
+					? WebcastBarrageMessage_TextPieceUserDecoder.fromJSON(object.userValue)
+					: undefined,
+		};
+	},
+
+	toJSON(message: WebcastBarrageMessage_TextPiece): unknown {
+		const obj: any = {};
+		if (message.type !== 0) {
+			obj.type = Math.round(message.type);
+		}
+		if (message.stringValue !== "") {
+			obj.stringValue = message.stringValue;
+		}
+		if (message.userValue !== undefined) {
+			obj.userValue = WebcastBarrageMessage_TextPieceUserDecoder.toJSON(message.userValue);
+		}
+		return obj;
+	},
+
+	create<I extends Exact<DeepPartial<WebcastBarrageMessage_TextPiece>, I>>(
+			base?: I,
+	): WebcastBarrageMessage_TextPiece {
+		return WebcastBarrageMessage_TextPieceDecoder.fromPartial(base ?? ({} as any));
+	},
+	fromPartial<I extends Exact<DeepPartial<WebcastBarrageMessage_TextPiece>, I>>(
+			object: I,
+	): WebcastBarrageMessage_TextPiece {
+		const message = createBaseWebcastBarrageMessage_TextPiece();
+		message.type = object.type ?? 0;
+		message.stringValue = object.stringValue ?? "";
+		message.userValue = (object.userValue !== undefined && object.userValue !== null)
+				? WebcastBarrageMessage_TextPieceUserDecoder.fromPartial(object.userValue)
+				: undefined;
+		return message;
+	},
+};
+
+function createBaseWebcastBarrageMessage_TextPieceUser(): WebcastBarrageMessage_TextPieceUser {
+	return { user: undefined, withColon: false };
+}
+
+export const WebcastBarrageMessage_TextPieceUserDecoder: MessageFns<WebcastBarrageMessage_TextPieceUser> = {
+	encode(message: WebcastBarrageMessage_TextPieceUser, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+		if (message.user !== undefined) {
+			UserDecoder.encode(message.user, writer.uint32(10).fork()).join();
+		}
+		if (message.withColon !== false) {
+			writer.uint32(16).bool(message.withColon);
+		}
+		return writer;
+	},
+
+	decode(input: BinaryReader | Uint8Array, length?: number): WebcastBarrageMessage_TextPieceUser {
+		const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+		let end = length === undefined ? reader.len : reader.pos + length;
+		const message = createBaseWebcastBarrageMessage_TextPieceUser();
+		while (reader.pos < end) {
+			const tag = reader.uint32();
+			switch (tag >>> 3) {
+				case 1: {
+					if (tag !== 10) {
+						break;
+					}
+
+					message.user = UserDecoder.decode(reader, reader.uint32());
+					continue;
+				}
+				case 2: {
+					if (tag !== 16) {
+						break;
+					}
+
+					message.withColon = reader.bool();
+					continue;
+				}
+			}
+			if ((tag & 7) === 4 || tag === 0) {
+				break;
+			}
+			reader.skip(tag & 7);
+		}
+		return message;
+	},
+
+	fromJSON(object: any): WebcastBarrageMessage_TextPieceUser {
+		return {
+			user: isSet(object.user) ? UserDecoder.fromJSON(object.user) : undefined,
+			withColon: isSet(object.withColon) ? globalThis.Boolean(object.withColon) : false,
+		};
+	},
+
+	toJSON(message: WebcastBarrageMessage_TextPieceUser): unknown {
+		const obj: any = {};
+		if (message.user !== undefined) {
+			obj.user = UserDecoder.toJSON(message.user);
+		}
+		if (message.withColon !== false) {
+			obj.withColon = message.withColon;
+		}
+		return obj;
+	},
+
+	create<I extends Exact<DeepPartial<WebcastBarrageMessage_TextPieceUser>, I>>(
+			base?: I,
+	): WebcastBarrageMessage_TextPieceUser {
+		return WebcastBarrageMessage_TextPieceUserDecoder.fromPartial(base ?? ({} as any));
+	},
+	fromPartial<I extends Exact<DeepPartial<WebcastBarrageMessage_TextPieceUser>, I>>(
+			object: I,
+	): WebcastBarrageMessage_TextPieceUser {
+		const message = createBaseWebcastBarrageMessage_TextPieceUser();
+		message.user = (object.user !== undefined && object.user !== null) ? UserDecoder.fromPartial(object.user) : undefined;
+		message.withColon = object.withColon ?? false;
+		return message;
+	},
+};
+export interface WebcastBarrageMessage {
+	event: WebcastMessageEvent | undefined;
+	msgType: number;
+	content: WebcastBarrageMessage_Text | undefined;
+}
+
+export interface WebcastBarrageMessage_Text {
+	key: string;
+	defaultPattern: string;
+	pieces: WebcastBarrageMessage_TextPiece[];
+}
+
+export interface WebcastBarrageMessage_TextPiece {
+	type: number;
+	stringValue: string;
+	userValue: WebcastBarrageMessage_TextPieceUser | undefined;
+}
+
+export interface WebcastBarrageMessage_TextPieceUser {
+	user: User | undefined;
+	withColon: boolean;
+}
+
+
+
 function bytesFromBase64(b64: string): Uint8Array {
 	const bin = globalThis.atob(b64);
 	const arr = new Uint8Array(bin.length);
@@ -6096,3 +6494,4 @@ export interface MessageFns<T> {
 
 	fromPartial<I extends Exact<DeepPartial<T>, I>>(object: I): T;
 }
+
