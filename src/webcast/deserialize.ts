@@ -66,6 +66,7 @@ export type WorkerInfoEvent = {
     webSocketId: string;
     agentId: string;
     schemaVersion: SchemaVersion;
+    deprecationWarning?: string;
   }
 }
 
