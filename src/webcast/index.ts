@@ -1,2 +1,2 @@
-export * from './deserialize';
+export * from './proto-utils';
 export * from './schemas';

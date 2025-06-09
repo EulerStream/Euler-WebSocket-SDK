@@ -10,7 +10,8 @@
   "scripts": {
     "test": "tsx ./test/test.ts",
     "format": "prettier --write src/**/*.js",
-    "build": "tsc"
+    "build": "tsc",
+    "pkg-ready": "npm run build"
   },
   "repository": {
     "type": "git",

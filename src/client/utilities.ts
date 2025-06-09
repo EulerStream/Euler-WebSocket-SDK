@@ -38,3 +38,12 @@ export function createWebSocketUrl(options: WebSocketOptions): string {
   return `${BASE_URL}?${queryString}`;
 }
 
+export function normalizeUniqueId(uniqueId: string) {
+
+  // Support full URI
+  uniqueId = uniqueId.replace('https://www.tiktok.com/', '');
+  uniqueId = uniqueId.replace('/live', '');
+  uniqueId = uniqueId.replace('@', '');
+  uniqueId = uniqueId.trim();
+  return uniqueId;
+}

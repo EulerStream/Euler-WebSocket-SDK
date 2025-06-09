@@ -22,6 +22,7 @@ const coerceBoolean = z
 export const WebSocketFeatureFlags = z.object({
   bundleEvents: coerceBoolean.default("true"),
   rawMessages: coerceBoolean.default("false"),
+  normalizeUniqueId: coerceBoolean.default("true"),
 });
 
 export const WebSocketOptionsSchema = z.object({

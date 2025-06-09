@@ -3157,6 +3157,28 @@ export interface HighScoreControlCfg {
   originDisplayToUserList: string[];
 }
 
+/** Heartbeat message */
+export interface HeartbeatMessage {
+  roomId: string;
+}
+
+/** Incoming & outbound messages */
+export interface WebcastPushFrame {
+  seqId: string;
+  logId: string;
+  service: string;
+  method: string;
+  headers: { [key: string]: string };
+  payloadEncoding: string;
+  payloadType: string;
+  payload: Uint8Array;
+}
+
+export interface WebcastPushFrame_HeadersEntry {
+  key: string;
+  value: string;
+}
+
 export interface Message {
   type: string;
   binary: Uint8Array;
@@ -4049,87 +4071,6 @@ export interface UserImageBadgeImage {
   url: string;
 }
 
-/** Websocket acknowledgment message */
-export interface WebSocketAckMessage {
-  id: string;
-  type: string;
-}
-
-/** Message representing the room info */
-export interface HeartbeatFrameRoomInfo {
-  roomId: string;
-}
-
-/** Message representing metadata field 6 */
-export interface HeartbeatFrameMetadataField6 {
-  unknown1: number;
-}
-
-/** Message representing metadata field 7 */
-export interface HeartbeatFrameMetadataField7 {
-  unknown1: number;
-}
-
-/** Heartbeat keepalive message */
-export interface HeartbeatFrame {
-  metadataField6: HeartbeatFrameMetadataField6 | undefined;
-  metadataField7: HeartbeatFrameMetadataField7 | undefined;
-  roomInfo: HeartbeatFrameRoomInfo | undefined;
-}
-
-/**
- * TODO: In a future release, set client_enter=1 on both /im/fetch and WS url; this is what the web client does
- * Didn't do it because it requires an agent update & sign server update
- *         // Create a room enter container
- *        const container = ImEnterRoomMessagePushFrame.fromPartial({
- *            payloadType: "im_enter_room",
- *            payload: {
- *                roomId: roomId,
- *                unknown1: 12,
- *                role: "audience",
- *                cursor: cursor,
- *                unknown2: 0,
- *                unknown3: "0",
- *                unknown4: 0
- *            },
- *            metadata: {
- *                unknown1: 98
- *            }
- *        });
- */
-export interface ImEnterRoomMessagePushFrame {
-  metadata:
-      | ImEnterRoomMessagePushFrame_Metadata
-      | undefined;
-  /** "im_enter_room" */
-  payloadType: string;
-  payload: ImEnterRoomMessagePushFrame_ImEnterRoomMessage | undefined;
-}
-
-export interface ImEnterRoomMessagePushFrame_Metadata {
-  /** "98" */
-  unknown1: number;
-}
-
-export interface ImEnterRoomMessagePushFrame_ImEnterRoomMessage {
-  /** Room ID */
-  roomId: string;
-  /** "12" */
-  unknown1: number;
-  /** "audience" */
-  role: string;
-  /** Cursor */
-  cursor: string;
-  /** "0" */
-  unknown2?:
-      | number
-      | undefined;
-  /** "0" */
-  unknown3: string;
-  /** "0" */
-  unknown4?: number | undefined;
-}
-
 export interface WebcastBarrageMessage {
   common: CommonMessageData | undefined;
   event: WebcastBarrageMessage_BarrageEvent | undefined;
@@ -4262,22 +4203,6 @@ export interface WebcastBarrageMessage_RightLabel {
   backgroundColor: string;
   content: Text | undefined;
   height: string;
-}
-
-export interface WebcastPushFrame {
-  seqId: string;
-  id: string;
-  service: string;
-  method: string;
-  headers: { [key: string]: string };
-  payloadEncoding: string;
-  type: string;
-  binary: Uint8Array;
-}
-
-export interface WebcastPushFrame_HeadersEntry {
-  key: string;
-  value: string;
 }
 
 /** Response from TikTokServer. Container for Messages */
@@ -4869,6 +4794,52 @@ export interface RoomVerifyMessage {
   content: string;
   noticeType: string;
   closeRoom: boolean;
+}
+
+export interface WebcastBarrageMessageOld {
+  event: CommonMessageData | undefined;
+  msgType: number;
+  content: WebcastBarrageMessageOld_Text | undefined;
+}
+
+export interface WebcastBarrageMessageOld_Text {
+  key: string;
+  defaultPattern: string;
+  pieces: WebcastBarrageMessageOld_TextPiece[];
+}
+
+export interface WebcastBarrageMessageOld_TextPiece {
+  type: number;
+  stringValue: string;
+  userValue: WebcastBarrageMessageOld_TextPieceUser | undefined;
+}
+
+export interface WebcastBarrageMessageOld_TextPieceUser {
+  user: User | undefined;
+  withColon: boolean;
+}
+
+export interface WebcastImEnterRoomMessage {
+  /** sent */
+  roomId: string;
+  /** Not sent, even when there is a hashtag on the room */
+  roomTag: string;
+  /** not sent */
+  liveRegion: string;
+  /** "12" <- It's a STATIC value for all streams, I checked the decompiled proto */
+  liveId: string;
+  /** "audience" */
+  identity: string;
+  /** "" */
+  cursor: string;
+  /** 0 */
+  accountType: string;
+  /** NOT sent */
+  enterUniqueId: string;
+  /** "0" */
+  filterWelcomeMsg: string;
+  /** 0 */
+  isAnchorContinueKeepMsg: boolean;
 }
 
 function createBaseCommonMessageData(): CommonMessageData {
@@ -24438,6 +24409,217 @@ export const HighScoreControlCfgDecoder: MessageFns<HighScoreControlCfg> = {
   },
 };
 
+function createBaseHeartbeatMessage(): HeartbeatMessage {
+  return { roomId: "0" };
+}
+
+export const HeartbeatMessageDecoder: MessageFns<HeartbeatMessage> = {
+  encode(message: HeartbeatMessage, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.roomId !== "0") {
+      writer.uint32(8).uint64(message.roomId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): HeartbeatMessage {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseHeartbeatMessage();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.roomId = reader.uint64().toString();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseWebcastPushFrame(): WebcastPushFrame {
+  return {
+    seqId: "0",
+    logId: "0",
+    service: "0",
+    method: "0",
+    headers: {},
+    payloadEncoding: "",
+    payloadType: "",
+    payload: new Uint8Array(0),
+  };
+}
+
+export const WebcastPushFrameDecoder: MessageFns<WebcastPushFrame> = {
+  encode(message: WebcastPushFrame, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.seqId !== "0") {
+      writer.uint32(8).int64(message.seqId);
+    }
+    if (message.logId !== "0") {
+      writer.uint32(16).int64(message.logId);
+    }
+    if (message.service !== "0") {
+      writer.uint32(24).int64(message.service);
+    }
+    if (message.method !== "0") {
+      writer.uint32(32).int64(message.method);
+    }
+    Object.entries(message.headers).forEach(([key, value]) => {
+      WebcastPushFrame_HeadersEntryDecoder.encode({ key: key as any, value }, writer.uint32(42).fork()).join();
+    });
+    if (message.payloadEncoding !== "") {
+      writer.uint32(50).string(message.payloadEncoding);
+    }
+    if (message.payloadType !== "") {
+      writer.uint32(58).string(message.payloadType);
+    }
+    if (message.payload.length !== 0) {
+      writer.uint32(66).bytes(message.payload);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WebcastPushFrame {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWebcastPushFrame();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.seqId = reader.int64().toString();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.logId = reader.int64().toString();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.service = reader.int64().toString();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.method = reader.int64().toString();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          const entry5 = WebcastPushFrame_HeadersEntryDecoder.decode(reader, reader.uint32());
+          if (entry5.value !== undefined) {
+            message.headers[entry5.key] = entry5.value;
+          }
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.payloadEncoding = reader.string();
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.payloadType = reader.string();
+          continue;
+        }
+        case 8: {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.payload = reader.bytes();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseWebcastPushFrame_HeadersEntry(): WebcastPushFrame_HeadersEntry {
+  return { key: "", value: "" };
+}
+
+export const WebcastPushFrame_HeadersEntryDecoder: MessageFns<WebcastPushFrame_HeadersEntry> = {
+  encode(message: WebcastPushFrame_HeadersEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.key !== "") {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.value !== "") {
+      writer.uint32(18).string(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WebcastPushFrame_HeadersEntry {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWebcastPushFrame_HeadersEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.key = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.value = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
 function createBaseMessage(): Message {
   return { type: "", binary: new Uint8Array(0) };
 }
@@ -33715,426 +33897,6 @@ export const UserImageBadgeImageDecoder: MessageFns<UserImageBadgeImage> = {
   },
 };
 
-function createBaseWebSocketAckMessage(): WebSocketAckMessage {
-  return { id: "0", type: "" };
-}
-
-export const WebSocketAckMessageDecoder: MessageFns<WebSocketAckMessage> = {
-  encode(message: WebSocketAckMessage, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "0") {
-      writer.uint32(16).uint64(message.id);
-    }
-    if (message.type !== "") {
-      writer.uint32(58).string(message.type);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): WebSocketAckMessage {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseWebSocketAckMessage();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.id = reader.uint64().toString();
-          continue;
-        }
-        case 7: {
-          if (tag !== 58) {
-            break;
-          }
-
-          message.type = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseHeartbeatFrameRoomInfo(): HeartbeatFrameRoomInfo {
-  return { roomId: "0" };
-}
-
-export const HeartbeatFrameRoomInfoDecoder: MessageFns<HeartbeatFrameRoomInfo> = {
-  encode(message: HeartbeatFrameRoomInfo, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.roomId !== "0") {
-      writer.uint32(8).uint64(message.roomId);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): HeartbeatFrameRoomInfo {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseHeartbeatFrameRoomInfo();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 8) {
-            break;
-          }
-
-          message.roomId = reader.uint64().toString();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseHeartbeatFrameMetadataField6(): HeartbeatFrameMetadataField6 {
-  return { unknown1: 0 };
-}
-
-export const HeartbeatFrameMetadataField6Decoder: MessageFns<HeartbeatFrameMetadataField6> = {
-  encode(message: HeartbeatFrameMetadataField6, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.unknown1 !== 0) {
-      writer.uint32(112).uint32(message.unknown1);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): HeartbeatFrameMetadataField6 {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseHeartbeatFrameMetadataField6();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 14: {
-          if (tag !== 112) {
-            break;
-          }
-
-          message.unknown1 = reader.uint32();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseHeartbeatFrameMetadataField7(): HeartbeatFrameMetadataField7 {
-  return { unknown1: 0 };
-}
-
-export const HeartbeatFrameMetadataField7Decoder: MessageFns<HeartbeatFrameMetadataField7> = {
-  encode(message: HeartbeatFrameMetadataField7, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.unknown1 !== 0) {
-      writer.uint32(104).uint32(message.unknown1);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): HeartbeatFrameMetadataField7 {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseHeartbeatFrameMetadataField7();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 13: {
-          if (tag !== 104) {
-            break;
-          }
-
-          message.unknown1 = reader.uint32();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseHeartbeatFrame(): HeartbeatFrame {
-  return { metadataField6: undefined, metadataField7: undefined, roomInfo: undefined };
-}
-
-export const HeartbeatFrameDecoder: MessageFns<HeartbeatFrame> = {
-  encode(message: HeartbeatFrame, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.metadataField6 !== undefined) {
-      HeartbeatFrameMetadataField6Decoder.encode(message.metadataField6, writer.uint32(50).fork()).join();
-    }
-    if (message.metadataField7 !== undefined) {
-      HeartbeatFrameMetadataField7Decoder.encode(message.metadataField7, writer.uint32(58).fork()).join();
-    }
-    if (message.roomInfo !== undefined) {
-      HeartbeatFrameRoomInfoDecoder.encode(message.roomInfo, writer.uint32(66).fork()).join();
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): HeartbeatFrame {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseHeartbeatFrame();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 6: {
-          if (tag !== 50) {
-            break;
-          }
-
-          message.metadataField6 = HeartbeatFrameMetadataField6Decoder.decode(reader, reader.uint32());
-          continue;
-        }
-        case 7: {
-          if (tag !== 58) {
-            break;
-          }
-
-          message.metadataField7 = HeartbeatFrameMetadataField7Decoder.decode(reader, reader.uint32());
-          continue;
-        }
-        case 8: {
-          if (tag !== 66) {
-            break;
-          }
-
-          message.roomInfo = HeartbeatFrameRoomInfoDecoder.decode(reader, reader.uint32());
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseImEnterRoomMessagePushFrame(): ImEnterRoomMessagePushFrame {
-  return { metadata: undefined, payloadType: "", payload: undefined };
-}
-
-export const ImEnterRoomMessagePushFrameDecoder: MessageFns<ImEnterRoomMessagePushFrame> = {
-  encode(message: ImEnterRoomMessagePushFrame, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.metadata !== undefined) {
-      ImEnterRoomMessagePushFrame_MetadataDecoder.encode(message.metadata, writer.uint32(50).fork()).join();
-    }
-    if (message.payloadType !== "") {
-      writer.uint32(58).string(message.payloadType);
-    }
-    if (message.payload !== undefined) {
-      ImEnterRoomMessagePushFrame_ImEnterRoomMessageDecoder.encode(message.payload, writer.uint32(66).fork()).join();
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): ImEnterRoomMessagePushFrame {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseImEnterRoomMessagePushFrame();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 6: {
-          if (tag !== 50) {
-            break;
-          }
-
-          message.metadata = ImEnterRoomMessagePushFrame_MetadataDecoder.decode(reader, reader.uint32());
-          continue;
-        }
-        case 7: {
-          if (tag !== 58) {
-            break;
-          }
-
-          message.payloadType = reader.string();
-          continue;
-        }
-        case 8: {
-          if (tag !== 66) {
-            break;
-          }
-
-          message.payload = ImEnterRoomMessagePushFrame_ImEnterRoomMessageDecoder.decode(reader, reader.uint32());
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseImEnterRoomMessagePushFrame_Metadata(): ImEnterRoomMessagePushFrame_Metadata {
-  return { unknown1: 0 };
-}
-
-export const ImEnterRoomMessagePushFrame_MetadataDecoder: MessageFns<ImEnterRoomMessagePushFrame_Metadata> = {
-  encode(message: ImEnterRoomMessagePushFrame_Metadata, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.unknown1 !== 0) {
-      writer.uint32(112).uint32(message.unknown1);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): ImEnterRoomMessagePushFrame_Metadata {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseImEnterRoomMessagePushFrame_Metadata();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 14: {
-          if (tag !== 112) {
-            break;
-          }
-
-          message.unknown1 = reader.uint32();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseImEnterRoomMessagePushFrame_ImEnterRoomMessage(): ImEnterRoomMessagePushFrame_ImEnterRoomMessage {
-  return { roomId: "0", unknown1: 0, role: "", cursor: "", unknown2: undefined, unknown3: "", unknown4: undefined };
-}
-
-export const ImEnterRoomMessagePushFrame_ImEnterRoomMessageDecoder: MessageFns<ImEnterRoomMessagePushFrame_ImEnterRoomMessage> = {
-  encode(
-      message: ImEnterRoomMessagePushFrame_ImEnterRoomMessage,
-      writer: BinaryWriter = new BinaryWriter(),
-  ): BinaryWriter {
-    if (message.roomId !== "0") {
-      writer.uint32(8).uint64(message.roomId);
-    }
-    if (message.unknown1 !== 0) {
-      writer.uint32(32).uint32(message.unknown1);
-    }
-    if (message.role !== "") {
-      writer.uint32(42).string(message.role);
-    }
-    if (message.cursor !== "") {
-      writer.uint32(50).string(message.cursor);
-    }
-    if (message.unknown2 !== undefined) {
-      writer.uint32(56).int32(message.unknown2);
-    }
-    if (message.unknown3 !== "") {
-      writer.uint32(74).string(message.unknown3);
-    }
-    if (message.unknown4 !== undefined) {
-      writer.uint32(80).int32(message.unknown4);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): ImEnterRoomMessagePushFrame_ImEnterRoomMessage {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseImEnterRoomMessagePushFrame_ImEnterRoomMessage();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 8) {
-            break;
-          }
-
-          message.roomId = reader.uint64().toString();
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.unknown1 = reader.uint32();
-          continue;
-        }
-        case 5: {
-          if (tag !== 42) {
-            break;
-          }
-
-          message.role = reader.string();
-          continue;
-        }
-        case 6: {
-          if (tag !== 50) {
-            break;
-          }
-
-          message.cursor = reader.string();
-          continue;
-        }
-        case 7: {
-          if (tag !== 56) {
-            break;
-          }
-
-          message.unknown2 = reader.int32();
-          continue;
-        }
-        case 9: {
-          if (tag !== 74) {
-            break;
-          }
-
-          message.unknown3 = reader.string();
-          continue;
-        }
-        case 10: {
-          if (tag !== 80) {
-            break;
-          }
-
-          message.unknown4 = reader.int32();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
 function createBaseWebcastBarrageMessage(): WebcastBarrageMessage {
   return {
     common: undefined,
@@ -35153,180 +34915,6 @@ export const WebcastBarrageMessage_RightLabelDecoder: MessageFns<WebcastBarrageM
           }
 
           message.height = reader.int64().toString();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseWebcastPushFrame(): WebcastPushFrame {
-  return {
-    seqId: "0",
-    id: "0",
-    service: "0",
-    method: "0",
-    headers: {},
-    payloadEncoding: "",
-    type: "",
-    binary: new Uint8Array(0),
-  };
-}
-
-export const WebcastPushFrameDecoder: MessageFns<WebcastPushFrame> = {
-  encode(message: WebcastPushFrame, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.seqId !== "0") {
-      writer.uint32(8).int64(message.seqId);
-    }
-    if (message.id !== "0") {
-      writer.uint32(16).int64(message.id);
-    }
-    if (message.service !== "0") {
-      writer.uint32(24).int64(message.service);
-    }
-    if (message.method !== "0") {
-      writer.uint32(32).int64(message.method);
-    }
-    Object.entries(message.headers).forEach(([key, value]) => {
-      WebcastPushFrame_HeadersEntryDecoder.encode({ key: key as any, value }, writer.uint32(42).fork()).join();
-    });
-    if (message.payloadEncoding !== "") {
-      writer.uint32(50).string(message.payloadEncoding);
-    }
-    if (message.type !== "") {
-      writer.uint32(58).string(message.type);
-    }
-    if (message.binary.length !== 0) {
-      writer.uint32(66).bytes(message.binary);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): WebcastPushFrame {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseWebcastPushFrame();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 8) {
-            break;
-          }
-
-          message.seqId = reader.int64().toString();
-          continue;
-        }
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.id = reader.int64().toString();
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.service = reader.int64().toString();
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.method = reader.int64().toString();
-          continue;
-        }
-        case 5: {
-          if (tag !== 42) {
-            break;
-          }
-
-          const entry5 = WebcastPushFrame_HeadersEntryDecoder.decode(reader, reader.uint32());
-          if (entry5.value !== undefined) {
-            message.headers[entry5.key] = entry5.value;
-          }
-          continue;
-        }
-        case 6: {
-          if (tag !== 50) {
-            break;
-          }
-
-          message.payloadEncoding = reader.string();
-          continue;
-        }
-        case 7: {
-          if (tag !== 58) {
-            break;
-          }
-
-          message.type = reader.string();
-          continue;
-        }
-        case 8: {
-          if (tag !== 66) {
-            break;
-          }
-
-          message.binary = reader.bytes();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseWebcastPushFrame_HeadersEntry(): WebcastPushFrame_HeadersEntry {
-  return { key: "", value: "" };
-}
-
-export const WebcastPushFrame_HeadersEntryDecoder: MessageFns<WebcastPushFrame_HeadersEntry> = {
-  encode(message: WebcastPushFrame_HeadersEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.key !== "") {
-      writer.uint32(10).string(message.key);
-    }
-    if (message.value !== "") {
-      writer.uint32(18).string(message.value);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): WebcastPushFrame_HeadersEntry {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseWebcastPushFrame_HeadersEntry();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.key = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.value = reader.string();
           continue;
         }
       }
@@ -41561,6 +41149,378 @@ export const RoomVerifyMessageDecoder: MessageFns<RoomVerifyMessage> = {
           }
 
           message.closeRoom = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseWebcastBarrageMessageOld(): WebcastBarrageMessageOld {
+  return { event: undefined, msgType: 0, content: undefined };
+}
+
+export const WebcastBarrageMessageOldDecoder: MessageFns<WebcastBarrageMessageOld> = {
+  encode(message: WebcastBarrageMessageOld, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.event !== undefined) {
+      CommonMessageDataDecoder.encode(message.event, writer.uint32(10).fork()).join();
+    }
+    if (message.msgType !== 0) {
+      writer.uint32(24).int32(message.msgType);
+    }
+    if (message.content !== undefined) {
+      WebcastBarrageMessageOld_TextDecoder.encode(message.content, writer.uint32(42).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WebcastBarrageMessageOld {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWebcastBarrageMessageOld();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.event = CommonMessageDataDecoder.decode(reader, reader.uint32());
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.msgType = reader.int32();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.content = WebcastBarrageMessageOld_TextDecoder.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseWebcastBarrageMessageOld_Text(): WebcastBarrageMessageOld_Text {
+  return { key: "", defaultPattern: "", pieces: [] };
+}
+
+export const WebcastBarrageMessageOld_TextDecoder: MessageFns<WebcastBarrageMessageOld_Text> = {
+  encode(message: WebcastBarrageMessageOld_Text, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.key !== "") {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.defaultPattern !== "") {
+      writer.uint32(18).string(message.defaultPattern);
+    }
+    for (const v of message.pieces) {
+      WebcastBarrageMessageOld_TextPieceDecoder.encode(v!, writer.uint32(34).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WebcastBarrageMessageOld_Text {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWebcastBarrageMessageOld_Text();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.key = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.defaultPattern = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.pieces.push(WebcastBarrageMessageOld_TextPieceDecoder.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseWebcastBarrageMessageOld_TextPiece(): WebcastBarrageMessageOld_TextPiece {
+  return { type: 0, stringValue: "", userValue: undefined };
+}
+
+export const WebcastBarrageMessageOld_TextPieceDecoder: MessageFns<WebcastBarrageMessageOld_TextPiece> = {
+  encode(message: WebcastBarrageMessageOld_TextPiece, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.type !== 0) {
+      writer.uint32(8).int32(message.type);
+    }
+    if (message.stringValue !== "") {
+      writer.uint32(90).string(message.stringValue);
+    }
+    if (message.userValue !== undefined) {
+      WebcastBarrageMessageOld_TextPieceUserDecoder.encode(message.userValue, writer.uint32(170).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WebcastBarrageMessageOld_TextPiece {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWebcastBarrageMessageOld_TextPiece();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.type = reader.int32();
+          continue;
+        }
+        case 11: {
+          if (tag !== 90) {
+            break;
+          }
+
+          message.stringValue = reader.string();
+          continue;
+        }
+        case 21: {
+          if (tag !== 170) {
+            break;
+          }
+
+          message.userValue = WebcastBarrageMessageOld_TextPieceUserDecoder.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseWebcastBarrageMessageOld_TextPieceUser(): WebcastBarrageMessageOld_TextPieceUser {
+  return { user: undefined, withColon: false };
+}
+
+export const WebcastBarrageMessageOld_TextPieceUserDecoder: MessageFns<WebcastBarrageMessageOld_TextPieceUser> = {
+  encode(message: WebcastBarrageMessageOld_TextPieceUser, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.user !== undefined) {
+      UserDecoder.encode(message.user, writer.uint32(10).fork()).join();
+    }
+    if (message.withColon !== false) {
+      writer.uint32(16).bool(message.withColon);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WebcastBarrageMessageOld_TextPieceUser {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWebcastBarrageMessageOld_TextPieceUser();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.user = UserDecoder.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.withColon = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseWebcastImEnterRoomMessage(): WebcastImEnterRoomMessage {
+  return {
+    roomId: "0",
+    roomTag: "",
+    liveRegion: "",
+    liveId: "0",
+    identity: "",
+    cursor: "",
+    accountType: "0",
+    enterUniqueId: "0",
+    filterWelcomeMsg: "",
+    isAnchorContinueKeepMsg: false,
+  };
+}
+
+export const WebcastImEnterRoomMessageDecoder: MessageFns<WebcastImEnterRoomMessage> = {
+  encode(message: WebcastImEnterRoomMessage, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.roomId !== "0") {
+      writer.uint32(8).int64(message.roomId);
+    }
+    if (message.roomTag !== "") {
+      writer.uint32(18).string(message.roomTag);
+    }
+    if (message.liveRegion !== "") {
+      writer.uint32(26).string(message.liveRegion);
+    }
+    if (message.liveId !== "0") {
+      writer.uint32(32).int64(message.liveId);
+    }
+    if (message.identity !== "") {
+      writer.uint32(42).string(message.identity);
+    }
+    if (message.cursor !== "") {
+      writer.uint32(50).string(message.cursor);
+    }
+    if (message.accountType !== "0") {
+      writer.uint32(56).int64(message.accountType);
+    }
+    if (message.enterUniqueId !== "0") {
+      writer.uint32(64).int64(message.enterUniqueId);
+    }
+    if (message.filterWelcomeMsg !== "") {
+      writer.uint32(74).string(message.filterWelcomeMsg);
+    }
+    if (message.isAnchorContinueKeepMsg !== false) {
+      writer.uint32(80).bool(message.isAnchorContinueKeepMsg);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): WebcastImEnterRoomMessage {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseWebcastImEnterRoomMessage();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.roomId = reader.int64().toString();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.roomTag = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.liveRegion = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.liveId = reader.int64().toString();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.identity = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.cursor = reader.string();
+          continue;
+        }
+        case 7: {
+          if (tag !== 56) {
+            break;
+          }
+
+          message.accountType = reader.int64().toString();
+          continue;
+        }
+        case 8: {
+          if (tag !== 64) {
+            break;
+          }
+
+          message.enterUniqueId = reader.int64().toString();
+          continue;
+        }
+        case 9: {
+          if (tag !== 74) {
+            break;
+          }
+
+          message.filterWelcomeMsg = reader.string();
+          continue;
+        }
+        case 10: {
+          if (tag !== 80) {
+            break;
+          }
+
+          message.isAnchorContinueKeepMsg = reader.bool();
           continue;
         }
       }

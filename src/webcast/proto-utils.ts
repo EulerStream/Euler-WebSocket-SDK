@@ -2,10 +2,12 @@ import * as tiktokSchema from "../webcast/schemas/tiktok-schema-v2";
 import {
   MessageFns,
   ProtoMessageFetchResult,
+  SchemaVersion,
   WebcastPushFrame,
-  WebcastPushFrameDecoder
-} from "./schemas/tiktok-schema-v2";
-import {SchemaVersion, WebcastSchemas} from "./schemas";
+  WebcastPushFrameDecoder,
+  WebcastSchemas
+} from "./schemas";
+import {BinaryWriter} from "@bufbuild/protobuf/wire";
 
 
 /** FUNCTION: Extract type T from MessageFns<T> **/
@@ -161,6 +163,11 @@ export type DecodedWebcastPushFrame = WebcastPushFrame & {
   protoMessageFetchResult?: ProtoMessageFetchResult;
 }
 
+export type RequiredDecodedWebcastPushFrame = Omit<DecodedWebcastPushFrame, 'protoMessageFetchResult'> & {
+  protoMessageFetchResult: ProtoMessageFetchResult;
+};
+
+
 /**
  * Deserialize a WebSocket message into a DecodedWebcastPushFrame
  *
@@ -174,17 +181,39 @@ export function deserializeWebSocketMessage(protoBinary: Uint8Array, protoSchema
   const rawWebcastWebSocketMessage = WebcastPushFrameDecoder.decode(protoBinary); // Always with v2
   let protoMessageFetchResult: ProtoMessageFetchResult | undefined = undefined;
 
-  if (rawWebcastWebSocketMessage.type === 'msg') {
+  if (rawWebcastWebSocketMessage.payloadEncoding === 'pb' && rawWebcastWebSocketMessage.payload) {
     protoMessageFetchResult = deserializeMessage(
-        "ProtoMessageFetchResult",
-        rawWebcastWebSocketMessage.binary,
+        'ProtoMessageFetchResult',
+        rawWebcastWebSocketMessage.payload,
         protoSchemaVersion
     );
   }
 
-  return {
-    ...rawWebcastWebSocketMessage,
-    protoMessageFetchResult
-  };
+  const decodedContainer: DecodedWebcastPushFrame = rawWebcastWebSocketMessage;
+  decodedContainer.protoMessageFetchResult = protoMessageFetchResult;
+  return decodedContainer;
+}
+
+export function createBaseWebcastPushFrame(overrides: Partial<WebcastPushFrame>): BinaryWriter {
+  // Basically, we need to set it to "0" so that it DOES NOT send the field(s)
+  const undefinedNum: string = '0';
+
+  overrides = Object.fromEntries(
+      Object.entries(overrides).filter(([_, value]) => value !== undefined)
+  );
+
+  return WebcastPushFrameDecoder.encode(
+      {
+        seqId: undefinedNum,
+        logId: undefinedNum,
+        payloadEncoding: 'pb',
+        payloadType: 'msg',
+        payload: new Uint8Array(),
+        service: undefinedNum,
+        method: undefinedNum,
+        headers: {},
+        ...overrides
+      }
+  );
 
 }
