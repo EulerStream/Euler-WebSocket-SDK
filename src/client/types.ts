@@ -12,17 +12,37 @@ export enum ClientCloseCode {
   TOO_MANY_CONNECTIONS = 4429,
   INVALID_OPTIONS = 4401,
   NOT_LIVE = 4404,
-  STREAM_END = 4005
+  STREAM_END = 4005,
+  NO_MESSAGES_TIMEOUT = 4006,
 }
 
 const coerceBoolean = z
     .enum(['true', 'false', '1', '0'])
     .transform(val => val === 'true' || val === '1');
 
+const coerceNumber = z
+    .string()
+    .transform(val => {
+      const num = Number(val);
+      if (isNaN(num)) {
+        throw new Error(`Invalid number: ${val}`);
+      }
+      return num;
+    });
+
 export const WebSocketFeatureFlags = z.object({
   bundleEvents: coerceBoolean.default("true"),
   rawMessages: coerceBoolean.default("false"),
   normalizeUniqueId: coerceBoolean.default("true"),
+
+  // Synthetic leave & join messages
+  syntheticPresence: coerceBoolean.default("true"),
+  syntheticPresenceLeaveAfter: coerceNumber.default("300"),
+
+  // Number of seconds of no TikTok messages before we close the WebSocket
+  // Sort of like a timeout for inactivity
+  closeInactiveWebSocketAfter: coerceNumber.default("300"),
+
 });
 
 export const WebSocketOptionsSchema = z.object({

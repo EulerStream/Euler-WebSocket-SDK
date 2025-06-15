@@ -4214,7 +4214,7 @@ export interface ProtoMessageFetchResult {
   internalExt: string;
   fetchType: number;
   wsParams: { [key: string]: string };
-  heartBeatDuration: string;
+  heartBeatDuration: number;
   needsAck: boolean;
   wsUrl: string;
   isFirst: boolean;
@@ -34936,7 +34936,7 @@ function createBaseProtoMessageFetchResult(): ProtoMessageFetchResult {
     internalExt: "",
     fetchType: 0,
     wsParams: {},
-    heartBeatDuration: "0",
+    heartBeatDuration: 0,
     needsAck: false,
     wsUrl: "",
     isFirst: false,
@@ -34968,8 +34968,8 @@ export const ProtoMessageFetchResultDecoder: MessageFns<ProtoMessageFetchResult>
     Object.entries(message.wsParams).forEach(([key, value]) => {
       ProtoMessageFetchResult_WsParamsEntryDecoder.encode({ key: key as any, value }, writer.uint32(58).fork()).join();
     });
-    if (message.heartBeatDuration !== "0") {
-      writer.uint32(64).int64(message.heartBeatDuration);
+    if (message.heartBeatDuration !== 0) {
+      writer.uint32(64).int32(message.heartBeatDuration);
     }
     if (message.needsAck !== false) {
       writer.uint32(72).bool(message.needsAck);
@@ -35060,7 +35060,7 @@ export const ProtoMessageFetchResultDecoder: MessageFns<ProtoMessageFetchResult>
             break;
           }
 
-          message.heartBeatDuration = reader.int64().toString();
+          message.heartBeatDuration = reader.int32();
           continue;
         }
         case 9: {

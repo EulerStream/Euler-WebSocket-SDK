@@ -3,11 +3,13 @@ import {
   MessageFns,
   ProtoMessageFetchResult,
   SchemaVersion,
+  User,
   WebcastPushFrame,
   WebcastPushFrameDecoder,
   WebcastSchemas
 } from "./schemas";
 import {BinaryWriter} from "@bufbuild/protobuf/wire";
+import {gunzipSync} from "fflate";
 
 
 /** FUNCTION: Extract type T from MessageFns<T> **/
@@ -62,6 +64,7 @@ export type RoomInfoEvent = {
   data: Record<string, any>
 }
 
+
 export type WorkerInfoEvent = {
   type: 'workerInfo',
   data: {
@@ -72,7 +75,26 @@ export type WorkerInfoEvent = {
   }
 }
 
-export type CustomData = RoomInfoEvent | WorkerInfoEvent;
+export type PresenceRecord = {
+  user: Pick<
+      User,
+      'userId' | 'uniqueId' | 'nickname' | 'bioDescription' | "profilePicture"
+  >,
+  firstSeen: number, // First event where they were seen
+  lastSeen: number // Last event where they were seen
+}
+
+export type SyntheticLeaveMessage = {
+  type: 'SyntheticLeaveMessage',
+  data: PresenceRecord
+}
+
+export type SyntheticJoinMessage = {
+  type: 'SyntheticJoinMessage',
+  data: PresenceRecord
+}
+
+export type CustomData = RoomInfoEvent | WorkerInfoEvent | SyntheticJoinMessage | SyntheticLeaveMessage;
 
 /** UNION: All possible pairs of type to the data the type represents **/
 export type DecodedData = {
@@ -182,11 +204,22 @@ export function deserializeWebSocketMessage(protoBinary: Uint8Array, protoSchema
   let protoMessageFetchResult: ProtoMessageFetchResult | undefined = undefined;
 
   if (rawWebcastWebSocketMessage.payloadEncoding === 'pb' && rawWebcastWebSocketMessage.payload) {
+    let binary: Uint8Array = rawWebcastWebSocketMessage.payload;
+
+    // Decompress binary (if gzip compressed—which)
+    // It isn't in the WebSocket server to safe CPU but may be if users use this pkg to decompress manually for debugging
+    // https://www.rfc-editor.org/rfc/rfc1950.html
+    if (binary && binary.length > 2 && binary[0] === 0x1f && binary[1] === 0x8b && binary[2] === 0x08) {
+      rawWebcastWebSocketMessage.payload = gunzipSync(binary);
+    }
+
     protoMessageFetchResult = deserializeMessage(
         'ProtoMessageFetchResult',
         rawWebcastWebSocketMessage.payload,
         protoSchemaVersion
     );
+
+
   }
 
   const decodedContainer: DecodedWebcastPushFrame = rawWebcastWebSocketMessage;
