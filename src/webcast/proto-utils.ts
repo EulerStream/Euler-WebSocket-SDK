@@ -84,6 +84,9 @@ export type PresenceRecord = {
   lastSeen: number // Last event where they were seen
 }
 
+export type PresenceRegistry = Record<string, PresenceRecord>;
+
+
 export type SyntheticLeaveMessage = {
   type: 'SyntheticLeaveMessage',
   data: PresenceRecord
@@ -94,7 +97,10 @@ export type SyntheticJoinMessage = {
   data: PresenceRecord
 }
 
-export type CustomData = RoomInfoEvent | WorkerInfoEvent | SyntheticJoinMessage | SyntheticLeaveMessage;
+export type CustomData = RoomInfoEvent
+    | WorkerInfoEvent
+    | SyntheticJoinMessage
+    | SyntheticLeaveMessage
 
 /** UNION: All possible pairs of type to the data the type represents **/
 export type DecodedData = {
