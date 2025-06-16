@@ -78,7 +78,7 @@ export type WorkerInfoEvent = {
 export type PresenceRecord = {
   user: Pick<
       User,
-      'userId' | 'uniqueId' | 'nickname' | 'bioDescription' | "profilePicture"
+      'userId' | 'uniqueId' | 'nickname' | "profilePicture"
   >,
   firstSeen: number, // First event where they were seen
   lastSeen: number // Last event where they were seen

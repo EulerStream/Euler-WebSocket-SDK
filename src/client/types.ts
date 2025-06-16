@@ -37,7 +37,7 @@ export const WebSocketFeatureFlags = z.object({
 
   // Synthetic leave & join messages
   syntheticPresence: coerceBoolean.default("true"),
-  syntheticPresenceLeaveAfter: coerceNumber.default("300"),
+  syntheticPresenceLeaveAfter: coerceNumber.default("5"),
 
   // Number of seconds of no TikTok messages before we close the WebSocket
   // Sort of like a timeout for inactivity
@@ -53,11 +53,13 @@ export const WebSocketOptionsSchema = z.object({
   features: WebSocketFeatureFlags.default({})
 });
 
-type BaseWebSocketOptions = z.infer<typeof WebSocketOptionsSchema>;
+export type ParsedWebSocketOptions = Omit<z.infer<typeof WebSocketOptionsSchema>, 'features'> & { features: WebSocketFeatureFlags };
 export type WebSocketFeatureFlags = z.infer<typeof WebSocketFeatureFlags>;
-export type WebSocketOptions = Omit<BaseWebSocketOptions, 'features'> & { features?: Partial<WebSocketFeatureFlags> };
+export type WebSocketOptions = Omit<ParsedWebSocketOptions, 'features'> & { features?: Partial<WebSocketFeatureFlags> };
 
 export type ClientMessageBundle = {
   timestamp: number,
   messages: DecodedData[]
 }
+
+
