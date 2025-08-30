@@ -10,6 +10,7 @@ import {
 } from "./schemas";
 import {BinaryWriter} from "@bufbuild/protobuf/wire";
 import {gunzipSync} from "fflate";
+import {ClientCloseCode, WebSocketFeatureFlagsType} from "../client";
 
 
 /** FUNCTION: Extract type T from MessageFns<T> **/
@@ -64,14 +65,33 @@ export type RoomInfoEvent = {
   data: Record<string, any>
 }
 
+export type TikTokConnectEvent = {
+  type: 'tiktok.connect',
+  data: {
+    agentId: string
+  }
+}
+
+export type TikTokDisconnectEvent = {
+  type: 'tiktok.disconnect',
+  data: {
+    reason: ClientCloseCode
+  }
+}
+
+export type TikTokRawBytes = {
+  type: 'tiktok.rawBytes',
+  data: {
+    raw: string
+  }
+}
 
 export type WorkerInfoEvent = {
   type: 'workerInfo',
   data: {
     webSocketId: string;
-    agentId: string;
     schemaVersion: SchemaVersion;
-    deprecationWarning?: string;
+    features: WebSocketFeatureFlagsType
   }
 }
 
@@ -101,6 +121,9 @@ export type CustomData = RoomInfoEvent
     | WorkerInfoEvent
     | SyntheticJoinMessage
     | SyntheticLeaveMessage
+    | TikTokConnectEvent
+    | TikTokDisconnectEvent
+    | TikTokRawBytes;
 
 /** UNION: All possible pairs of type to the data the type represents **/
 export type DecodedData = {

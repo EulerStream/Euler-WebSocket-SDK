@@ -5,9 +5,24 @@ import {coerceBoolean, coerceNumber} from "../extras/zod-extra";
 export enum ClientCloseCode {
 
   /**
+   * Responding to a client's close request normally
+   */
+  NORMAL = 1000,
+
+  /**
    * Error updating presence on connect, or upstream error on connect in the proxy.
    */
   INTERNAL_SERVER_ERROR = 1011,
+
+  /**
+   * Error fetching the /webcast/fetch endpoint for the socket
+   */
+  WEBCAST_FETCH_ERROR = 4556,
+
+  /**
+   * Error fetching the /webcast/room_info endpoint for the socket
+   */
+  ROOM_INFO_FETCH_ERROR = 4557,
 
   /**
    * TikTok closed the connected unexpectedly.
@@ -22,7 +37,7 @@ export enum ClientCloseCode {
   /**
    * The client provided invalid options, such as an invalid uniqueId or JWT key.
    */
-  INVALID_OPTIONS = 4401,
+  INVALID_OPTIONS = 4400,
 
   /**
    * The requested streamer is not live.
@@ -38,10 +53,31 @@ export enum ClientCloseCode {
    * There were no messages in the timeout period, the WebSocket was assumed dead and closed.
    */
   NO_MESSAGES_TIMEOUT = 4006,
+
+  /**
+   * Invalid Auth
+   */
+  INVALID_AUTH = 4401,
+
+  /**
+   * Accessing a creator the JWT has no access to
+   */
+  NO_PERMISSION = 4403,
+
+  /**
+   * WebSocket exceeded 8 hour lifetime
+   */
+  MAX_LIFETIME_EXCEEDED = 4555,
+
 }
 
 // Short descriptions that can be sent over WebSocket close reason
 export const CloseMessageMap: Record<ClientCloseCode, string> = {
+  [ClientCloseCode.ROOM_INFO_FETCH_ERROR]: "Error fetching /webcast/room_info",
+  [ClientCloseCode.WEBCAST_FETCH_ERROR]: "Error fetching /webcast/fetch",
+  [ClientCloseCode.INVALID_AUTH]: "Invalid auth",
+  [ClientCloseCode.MAX_LIFETIME_EXCEEDED]: "Max lifetime exceeded",
+  [ClientCloseCode.NO_PERMISSION]: "No permission",
   [ClientCloseCode.INTERNAL_SERVER_ERROR]: "Internal server error",
   [ClientCloseCode.TIKTOK_CLOSED_CONNECTION]: "TikTok closed the connection unexpectedly",
   [ClientCloseCode.TOO_MANY_CONNECTIONS]: "Too many concurrent connections",
@@ -49,6 +85,7 @@ export const CloseMessageMap: Record<ClientCloseCode, string> = {
   [ClientCloseCode.NOT_LIVE]: "Streamer is not live",
   [ClientCloseCode.STREAM_END]: "TikTok stream ended",
   [ClientCloseCode.NO_MESSAGES_TIMEOUT]: "No messages received in timeout period, closing WebSocket",
+  [ClientCloseCode.NORMAL]: "Normal closure"
 }
 
 export const WebSocketFeatureFlags = z.object({
@@ -74,7 +111,7 @@ export const WebSocketFeatureFlags = z.object({
    * When enabled, the client will calculate presence information for users in the room.
    * This enables us to give custom SyntheticJoinMessage and SyntheticLeaveMessage, a full presence system.
    */
-  syntheticPresence: coerceBoolean({default: true}),
+  syntheticPresence: coerceBoolean({default: false}),
 
   /**
    * Configures how long a user must be inactive before we send a SyntheticLeaveMessage.
@@ -85,12 +122,22 @@ export const WebSocketFeatureFlags = z.object({
    * Configures how long we can wait with NO messages coming from TikTok before we assume the WebSocket
    * is dead and close it.
    */
-  closeInactiveWebSocketAfter: coerceNumber({default: 60, min: 30, max: 3600}),
+  closeInactiveWebSocketAfter: coerceNumber({default: 45, min: 30, max: 3600}),
 
   /**
    * The TikTok protobuf schema version to use for decoding messages.
    */
-  schemaVersion: z.nativeEnum(SchemaVersion).default(SchemaVersion.v1),
+  schemaVersion: z.nativeEnum(SchemaVersion).default(SchemaVersion.v2),
+
+  /**
+   * Whether to add a "raw" entry including base64 encoded Protobuf with the JSON
+   */
+  includeRawBytes: coerceBoolean({default: false}),
+
+  /**
+   * Whether to use the Enterprise Sign API infrastructure (recommended)
+   */
+  useEnterpriseApi: coerceBoolean({default: false})
 
 });
 
@@ -102,10 +149,12 @@ export const WebSocketOptionsSchema = z.object({
 });
 
 export type ParsedWebSocketOptions = Omit<z.infer<typeof WebSocketOptionsSchema>, 'features'> & {
-  features: WebSocketFeatureFlags
+  features: WebSocketFeatureFlagsType
 };
-export type WebSocketFeatureFlags = z.infer<typeof WebSocketFeatureFlags>;
-export type WebSocketOptions = Omit<ParsedWebSocketOptions, 'features'> & { features?: Partial<WebSocketFeatureFlags> };
+export type WebSocketFeatureFlagsType = z.infer<typeof WebSocketFeatureFlags>;
+export type WebSocketOptions = Omit<ParsedWebSocketOptions, 'features'> & {
+  features?: Partial<WebSocketFeatureFlagsType>
+};
 
 export type ClientMessageBundle = {
   timestamp: number,
