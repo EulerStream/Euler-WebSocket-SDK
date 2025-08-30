@@ -122,7 +122,7 @@ export const WebSocketFeatureFlags = z.object({
    * Configures how long we can wait with NO messages coming from TikTok before we assume the WebSocket
    * is dead and close it.
    */
-  closeInactiveWebSocketAfter: coerceNumber({default: 45, min: 30, max: 3600}),
+  closeInactiveWebSocketAfter: coerceNumber({default: 60, min: 30, max: 3600}),
 
   /**
    * The TikTok protobuf schema version to use for decoding messages.
