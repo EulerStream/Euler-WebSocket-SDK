@@ -30,12 +30,12 @@ export enum ClientCloseCode {
   TIKTOK_CLOSED_CONNECTION = 4500,
 
   /**
-   * The account has too many connections.
+   * The account has too many connections OR is connecting too quickly.
    */
   TOO_MANY_CONNECTIONS = 4429,
 
   /**
-   * The client provided invalid options, such as an invalid uniqueId or JWT key.
+   * The client provided invalid context, such as an invalid uniqueId or JWT key.
    */
   INVALID_OPTIONS = 4400,
 
@@ -81,7 +81,7 @@ export const CloseMessageMap: Record<ClientCloseCode, string> = {
   [ClientCloseCode.INTERNAL_SERVER_ERROR]: "Internal server error",
   [ClientCloseCode.TIKTOK_CLOSED_CONNECTION]: "TikTok closed the connection unexpectedly",
   [ClientCloseCode.TOO_MANY_CONNECTIONS]: "Too many concurrent connections",
-  [ClientCloseCode.INVALID_OPTIONS]: "Invalid options provided",
+  [ClientCloseCode.INVALID_OPTIONS]: "Invalid context provided",
   [ClientCloseCode.NOT_LIVE]: "Streamer is not live",
   [ClientCloseCode.STREAM_END]: "TikTok stream ended",
   [ClientCloseCode.NO_MESSAGES_TIMEOUT]: "No messages received in timeout period, closing WebSocket",

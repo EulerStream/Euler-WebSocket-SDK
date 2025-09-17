@@ -28,9 +28,9 @@ function flattenObject(obj: Record<string, any>, prefix: string = "", result: Re
 }
 
 /**
- * Creates a WebSocket URL with query parameters based on the provided options.
+ * Creates a WebSocket URL with query parameters based on the provided context.
  *
- * @param options {WebSocketOptions} The options to include in the WebSocket URL
+ * @param options {WebSocketOptions} The context to include in the WebSocket URL
  */
 export function createWebSocketUrl(options: WebSocketOptions): string {
   const flatParams = flattenObject(options);
