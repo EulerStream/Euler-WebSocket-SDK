@@ -3160,6 +3160,7 @@ export interface HighScoreControlCfg {
 /** Heartbeat message */
 export interface HeartbeatMessage {
   roomId: string;
+  sendPacketSeqId: string;
 }
 
 /** Incoming & outbound messages */
@@ -4013,32 +4014,6 @@ export interface TreasureBoxData {
   timestamp: string;
 }
 
-/** New Subscriber message */
-export interface WebcastSubNotifyMessage {
-  common: CommonMessageData | undefined;
-  user: User | undefined;
-  exhibitionType: ExhibitionType;
-  subMonth: string;
-  subscribeType: SubscribeType;
-  oldSubscribeStatus: OldSubscribeStatus;
-  subscribeMessageType?: MessageType | undefined;
-  subscribingStatus: SubscribingStatus;
-  isSend: boolean;
-  isCustom: boolean;
-  giftSource: GiftSource;
-  messageDisplayStyle: MessageDisplayStyle;
-  publicAreaMessageCommon: PublicAreaMessageCommon | undefined;
-  packageId: string;
-  eventTracking: WebcastSubNotifyMessage_EventTracking | undefined;
-}
-
-export interface WebcastSubNotifyMessage_EventTracking {
-  giftSubSenderId: string;
-  giftSubReceiverId: string;
-  anchorId: string;
-  giftSubOrderCreateTime: string;
-}
-
 export interface FollowInfo {
   followingCount: number;
   followerCount: number;
@@ -4377,14 +4352,9 @@ export interface WebcastImDeleteMessage {
 
 export interface WebcastInRoomBannerMessage {
   common: CommonMessageData | undefined;
-  data: { [key: string]: string };
+  data: string;
   position: number;
   actionType: number;
-}
-
-export interface WebcastInRoomBannerMessage_DataEntry {
-  key: string;
-  value: string;
 }
 
 export interface WebcastRankUpdateMessage {
@@ -24410,13 +24380,16 @@ export const HighScoreControlCfgDecoder: MessageFns<HighScoreControlCfg> = {
 };
 
 function createBaseHeartbeatMessage(): HeartbeatMessage {
-  return { roomId: "0" };
+  return { roomId: "0", sendPacketSeqId: "0" };
 }
 
 export const HeartbeatMessageDecoder: MessageFns<HeartbeatMessage> = {
   encode(message: HeartbeatMessage, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.roomId !== "0") {
       writer.uint32(8).uint64(message.roomId);
+    }
+    if (message.sendPacketSeqId !== "0") {
+      writer.uint32(16).uint64(message.sendPacketSeqId);
     }
     return writer;
   },
@@ -24434,6 +24407,14 @@ export const HeartbeatMessageDecoder: MessageFns<HeartbeatMessage> = {
           }
 
           message.roomId = reader.uint64().toString();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.sendPacketSeqId = reader.uint64().toString();
           continue;
         }
       }
@@ -33310,283 +33291,6 @@ export const TreasureBoxDataDecoder: MessageFns<TreasureBoxData> = {
   },
 };
 
-function createBaseWebcastSubNotifyMessage(): WebcastSubNotifyMessage {
-  return {
-    common: undefined,
-    user: undefined,
-    exhibitionType: 0,
-    subMonth: "0",
-    subscribeType: 0,
-    oldSubscribeStatus: 0,
-    subscribeMessageType: undefined,
-    subscribingStatus: 0,
-    isSend: false,
-    isCustom: false,
-    giftSource: 0,
-    messageDisplayStyle: 0,
-    publicAreaMessageCommon: undefined,
-    packageId: "",
-    eventTracking: undefined,
-  };
-}
-
-export const WebcastSubNotifyMessageDecoder: MessageFns<WebcastSubNotifyMessage> = {
-  encode(message: WebcastSubNotifyMessage, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.common !== undefined) {
-      CommonMessageDataDecoder.encode(message.common, writer.uint32(10).fork()).join();
-    }
-    if (message.user !== undefined) {
-      UserDecoder.encode(message.user, writer.uint32(18).fork()).join();
-    }
-    if (message.exhibitionType !== 0) {
-      writer.uint32(24).int32(message.exhibitionType);
-    }
-    if (message.subMonth !== "0") {
-      writer.uint32(32).int64(message.subMonth);
-    }
-    if (message.subscribeType !== 0) {
-      writer.uint32(40).int32(message.subscribeType);
-    }
-    if (message.oldSubscribeStatus !== 0) {
-      writer.uint32(48).int32(message.oldSubscribeStatus);
-    }
-    if (message.subscribeMessageType !== undefined) {
-      writer.uint32(56).int32(message.subscribeMessageType);
-    }
-    if (message.subscribingStatus !== 0) {
-      writer.uint32(64).int32(message.subscribingStatus);
-    }
-    if (message.isSend !== false) {
-      writer.uint32(72).bool(message.isSend);
-    }
-    if (message.isCustom !== false) {
-      writer.uint32(80).bool(message.isCustom);
-    }
-    if (message.giftSource !== 0) {
-      writer.uint32(88).int32(message.giftSource);
-    }
-    if (message.messageDisplayStyle !== 0) {
-      writer.uint32(96).int32(message.messageDisplayStyle);
-    }
-    if (message.publicAreaMessageCommon !== undefined) {
-      PublicAreaMessageCommonDecoder.encode(message.publicAreaMessageCommon, writer.uint32(106).fork()).join();
-    }
-    if (message.packageId !== "") {
-      writer.uint32(114).string(message.packageId);
-    }
-    if (message.eventTracking !== undefined) {
-      WebcastSubNotifyMessage_EventTrackingDecoder.encode(message.eventTracking, writer.uint32(122).fork()).join();
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): WebcastSubNotifyMessage {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseWebcastSubNotifyMessage();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.common = CommonMessageDataDecoder.decode(reader, reader.uint32());
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.user = UserDecoder.decode(reader, reader.uint32());
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.exhibitionType = reader.int32() as any;
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.subMonth = reader.int64().toString();
-          continue;
-        }
-        case 5: {
-          if (tag !== 40) {
-            break;
-          }
-
-          message.subscribeType = reader.int32() as any;
-          continue;
-        }
-        case 6: {
-          if (tag !== 48) {
-            break;
-          }
-
-          message.oldSubscribeStatus = reader.int32() as any;
-          continue;
-        }
-        case 7: {
-          if (tag !== 56) {
-            break;
-          }
-
-          message.subscribeMessageType = reader.int32() as any;
-          continue;
-        }
-        case 8: {
-          if (tag !== 64) {
-            break;
-          }
-
-          message.subscribingStatus = reader.int32() as any;
-          continue;
-        }
-        case 9: {
-          if (tag !== 72) {
-            break;
-          }
-
-          message.isSend = reader.bool();
-          continue;
-        }
-        case 10: {
-          if (tag !== 80) {
-            break;
-          }
-
-          message.isCustom = reader.bool();
-          continue;
-        }
-        case 11: {
-          if (tag !== 88) {
-            break;
-          }
-
-          message.giftSource = reader.int32() as any;
-          continue;
-        }
-        case 12: {
-          if (tag !== 96) {
-            break;
-          }
-
-          message.messageDisplayStyle = reader.int32() as any;
-          continue;
-        }
-        case 13: {
-          if (tag !== 106) {
-            break;
-          }
-
-          message.publicAreaMessageCommon = PublicAreaMessageCommonDecoder.decode(reader, reader.uint32());
-          continue;
-        }
-        case 14: {
-          if (tag !== 114) {
-            break;
-          }
-
-          message.packageId = reader.string();
-          continue;
-        }
-        case 15: {
-          if (tag !== 122) {
-            break;
-          }
-
-          message.eventTracking = WebcastSubNotifyMessage_EventTrackingDecoder.decode(reader, reader.uint32());
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseWebcastSubNotifyMessage_EventTracking(): WebcastSubNotifyMessage_EventTracking {
-  return { giftSubSenderId: "0", giftSubReceiverId: "0", anchorId: "0", giftSubOrderCreateTime: "0" };
-}
-
-export const WebcastSubNotifyMessage_EventTrackingDecoder: MessageFns<WebcastSubNotifyMessage_EventTracking> = {
-  encode(message: WebcastSubNotifyMessage_EventTracking, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.giftSubSenderId !== "0") {
-      writer.uint32(8).int64(message.giftSubSenderId);
-    }
-    if (message.giftSubReceiverId !== "0") {
-      writer.uint32(16).int64(message.giftSubReceiverId);
-    }
-    if (message.anchorId !== "0") {
-      writer.uint32(24).int64(message.anchorId);
-    }
-    if (message.giftSubOrderCreateTime !== "0") {
-      writer.uint32(32).int64(message.giftSubOrderCreateTime);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): WebcastSubNotifyMessage_EventTracking {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseWebcastSubNotifyMessage_EventTracking();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 8) {
-            break;
-          }
-
-          message.giftSubSenderId = reader.int64().toString();
-          continue;
-        }
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.giftSubReceiverId = reader.int64().toString();
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.anchorId = reader.int64().toString();
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.giftSubOrderCreateTime = reader.int64().toString();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
 function createBaseFollowInfo(): FollowInfo {
   return { followingCount: 0, followerCount: 0, followStatus: 0, pushStatus: 0 };
 }
@@ -36742,7 +36446,7 @@ export const WebcastImDeleteMessageDecoder: MessageFns<WebcastImDeleteMessage> =
 };
 
 function createBaseWebcastInRoomBannerMessage(): WebcastInRoomBannerMessage {
-  return { common: undefined, data: {}, position: 0, actionType: 0 };
+  return { common: undefined, data: "", position: 0, actionType: 0 };
 }
 
 export const WebcastInRoomBannerMessageDecoder: MessageFns<WebcastInRoomBannerMessage> = {
@@ -36750,9 +36454,9 @@ export const WebcastInRoomBannerMessageDecoder: MessageFns<WebcastInRoomBannerMe
     if (message.common !== undefined) {
       CommonMessageDataDecoder.encode(message.common, writer.uint32(10).fork()).join();
     }
-    Object.entries(message.data).forEach(([key, value]) => {
-      WebcastInRoomBannerMessage_DataEntryDecoder.encode({ key: key as any, value }, writer.uint32(18).fork()).join();
-    });
+    if (message.data !== "") {
+      writer.uint32(18).string(message.data);
+    }
     if (message.position !== 0) {
       writer.uint32(24).int32(message.position);
     }
@@ -36782,10 +36486,7 @@ export const WebcastInRoomBannerMessageDecoder: MessageFns<WebcastInRoomBannerMe
             break;
           }
 
-          const entry2 = WebcastInRoomBannerMessage_DataEntryDecoder.decode(reader, reader.uint32());
-          if (entry2.value !== undefined) {
-            message.data[entry2.key] = entry2.value;
-          }
+          message.data = reader.string();
           continue;
         }
         case 3: {
@@ -36802,54 +36503,6 @@ export const WebcastInRoomBannerMessageDecoder: MessageFns<WebcastInRoomBannerMe
           }
 
           message.actionType = reader.int32();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-};
-
-function createBaseWebcastInRoomBannerMessage_DataEntry(): WebcastInRoomBannerMessage_DataEntry {
-  return { key: "", value: "" };
-}
-
-export const WebcastInRoomBannerMessage_DataEntryDecoder: MessageFns<WebcastInRoomBannerMessage_DataEntry> = {
-  encode(message: WebcastInRoomBannerMessage_DataEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.key !== "") {
-      writer.uint32(10).string(message.key);
-    }
-    if (message.value !== "") {
-      writer.uint32(18).string(message.value);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): WebcastInRoomBannerMessage_DataEntry {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseWebcastInRoomBannerMessage_DataEntry();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.key = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.value = reader.string();
           continue;
         }
       }

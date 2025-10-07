@@ -11,6 +11,7 @@ import {
 import {BinaryWriter} from "@bufbuild/protobuf/wire";
 import {gunzipSync} from "fflate";
 import {ClientCloseCode, WebSocketFeatureFlagsType} from "../client";
+import {WebcastBarrageMessage} from "../webcast/schemas/tiktok-schema-v2";
 
 
 /** FUNCTION: Extract type T from MessageFns<T> **/
@@ -63,6 +64,18 @@ export type WebcastEvent = WebcastEventMap[keyof WebcastEventMap];
 export type RoomInfoEvent = {
   type: 'roomInfo',
   data: Record<string, any>
+}
+
+export type SuperFanEvent = {
+  type: 'superFan',
+  data: WebcastBarrageMessage
+}
+
+export type DecodeErrorEvent = {
+  type: 'decodeError',
+  data: {
+    message: string
+  }
 }
 
 export type TikTokConnectEvent = {
@@ -123,6 +136,8 @@ export type CustomData = RoomInfoEvent
     | SyntheticLeaveMessage
     | TikTokConnectEvent
     | TikTokDisconnectEvent
+    | SuperFanEvent
+    | DecodeErrorEvent
     | TikTokRawBytes;
 
 /** UNION: All possible pairs of type to the data the type represents **/
@@ -172,6 +187,8 @@ function deserializeProtoMessageFetchResult(
       const deserializedMessage: WebcastMessageMap[typeof messageType] = deserializeMessage(messageType as WebcastMessageName, message.payload, protoSchemaVersion);
       message.decodedData = {type: messageType, data: deserializedMessage} as DecodedData
     } catch (ex) {
+      // Attach the error to the message for later inspection
+      message.decodedDataError = ex as Error;
       console.info(`Failed to decode message type: ${message.type}`, ex);
     }
 
@@ -247,7 +264,6 @@ export function deserializeWebSocketMessage(protoBinary: Uint8Array, protoSchema
         rawWebcastWebSocketMessage.payload,
         protoSchemaVersion
     );
-
 
   }
 
