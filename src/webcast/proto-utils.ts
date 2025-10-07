@@ -104,7 +104,8 @@ export type WorkerInfoEvent = {
   data: {
     webSocketId: string;
     schemaVersion: SchemaVersion;
-    features: WebSocketFeatureFlagsType
+    features: WebSocketFeatureFlagsType;
+    isLoggedIn: boolean;
   }
 }
 

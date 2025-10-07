@@ -137,7 +137,12 @@ export const WebSocketFeatureFlags = z.object({
   /**
    * Whether to use the Enterprise Sign API infrastructure (recommended)
    */
-  useEnterpriseApi: coerceBoolean({default: false})
+  useEnterpriseApi: coerceBoolean({default: false}),
+
+  /**
+   * Select the platform to connect with
+   */
+  webcastPlatform: z.enum(['mobile', 'web']).default('web'),
 
 });
 
@@ -145,7 +150,9 @@ export const WebSocketOptionsSchema = z.object({
   uniqueId: z.string(),
   jwtKey: z.string().optional().nullable(),
   apiKey: z.string().optional().nullable(),
-  features: WebSocketFeatureFlags.default({})
+  features: WebSocketFeatureFlags.default({}),
+  sessionId: z.string().optional().nullable(),
+  ttTargetIdc: z.string().optional().nullable()
 });
 
 export type ParsedWebSocketOptions = Omit<z.infer<typeof WebSocketOptionsSchema>, 'features'> & {
