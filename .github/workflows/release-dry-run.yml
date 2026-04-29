@@ -1,0 +1,63 @@
+name: "Release: Dry Run"
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type (not committed/pushed)'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Upgrade npm
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Bump version (in-memory only)
+        run: npm version ${{ inputs.bump }} --no-git-tag-version
+
+      - name: Read new version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: pnpm run build
+
+      - name: npm publish --dry-run
+        run: npm publish --access public --dry-run
+
+      - name: pnpm pack (inspect tarball contents)
+        run: |
+          pnpm pack
+          TARBALL=$(ls eulerstream-euler-websocket-sdk-*.tgz | head -n1)
+          echo "### Tarball: $TARBALL" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tar -tzf "$TARBALL" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Summary
+        run: |
+          echo "### Dry-run for @eulerstream/euler-websocket-sdk@${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "No publish, no commit, no tag." >> $GITHUB_STEP_SUMMARY
