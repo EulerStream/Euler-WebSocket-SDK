@@ -1,7 +1,6 @@
-import {DecodedData} from "./webcast";
+import {DecodedData} from "./webcast/schemas";
 
-/** OVERRIDE MODULE: Extend BaseProtoMessage with decodedData property **/
-declare module "./webcast/schemas/tiktok-schema-v2" {
+declare module "tiktok-live-proto/v2" {
 
   interface BaseProtoMessage {
     decodedData?: DecodedData;

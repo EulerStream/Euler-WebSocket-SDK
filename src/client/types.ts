@@ -1,6 +1,7 @@
 import {z} from "zod";
-import {DecodedData, SchemaVersion} from "../webcast";
+import {SchemaVersion} from "../webcast/schemas";
 import {coerceBoolean, coerceNumber} from "../extras/zod-extra";
+import {DecodedData} from "../webcast/proto-utils";
 
 export enum ClientCloseCode {
 

@@ -1,5 +1,5 @@
 import EventEmitter from "eventemitter3";
-import {WebcastEventName, WebcastMessageMap} from "../webcast";
+import {WebcastEventName, WebcastMessageMap} from "../webcast/proto-utils";
 
 /** An event-map type for the typed-emitter **/
 export type TypedEmitterEventMap = { [K in WebcastEventName]: (event: WebcastMessageMap[K]) => void; }

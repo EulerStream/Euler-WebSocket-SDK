@@ -4,3 +4,4 @@ publish.ts
 .npmrc
 dist
 .turbo
+.DS_Store
