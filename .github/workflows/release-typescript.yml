@@ -20,10 +20,10 @@ jobs:
   check-branch:
     runs-on: ubuntu-latest
     steps:
-      - name: Enforce main branch
-        if: github.ref != 'refs/heads/main'
+      - name: Enforce master branch
+        if: github.ref != 'refs/heads/master'
         run: |
-          echo "::error::Release must be triggered from the main branch, got ${{ github.ref }}"
+          echo "::error::Release must be triggered from the master branch, got ${{ github.ref }}"
           exit 1
 
   release:
