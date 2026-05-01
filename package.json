@@ -38,6 +38,16 @@
         "types": "./dist/node/v2.d.ts",
         "default": "./dist/node/v2.js"
       }
+    },
+    "./v3": {
+        "browser": {
+          "types": "./dist/web/v3.d.ts",
+          "default": "./dist/web/v3.js"
+        },
+        "import": {
+          "types": "./dist/node/v3.d.ts",
+          "default": "./dist/node/v3.js"
+        }
     }
   },
   "scripts": {
@@ -75,7 +85,7 @@
     "@bufbuild/protobuf": "^2.4.0",
     "eventemitter3": "^5.0.1",
     "fflate": "^0.8.2",
-    "tiktok-live-proto": "0.1.1",
+    "tiktok-live-proto": "0.2.2",
     "zod": "^3.25.34"
   },
   "devDependencies": {

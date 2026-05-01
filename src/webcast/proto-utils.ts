@@ -1,8 +1,8 @@
 import * as tiktokSchema from "tiktok-live-proto/v2";
-import {MessageFns, ProtoMessageFetchResult, User, WebcastBarrageMessage, WebcastPushFrame} from "tiktok-live-proto/v2";
+import {MessageFns} from "tiktok-live-proto/v2";
+import {ProtoMessageFetchResult, User, WebcastBarrageMessage, WebcastPushFrame} from "tiktok-live-proto/v3";
 import {SchemaVersion} from "./schemas";
 import {ClientCloseCode, WebSocketFeatureFlagsType} from "../client";
-
 
 /** FUNCTION: Extract type T from MessageFns<T> **/
 type ExtractType<T> = T extends MessageFns<infer U> ? U : never;
@@ -75,6 +75,19 @@ export type TikTokDisconnectEvent = {
   }
 }
 
+export type RoomStatusEvent = {
+  type: 'room.status',
+  data: {
+    state: 'connecting' | 'connected' | 'reconnecting' | 'offline' | 'ended' | 'error'
+    ownerInstanceId: string
+    roomId?: string
+    attempt?: number
+    code?: number
+    message?: string
+    terminal?: boolean
+  }
+}
+
 export type TikTokRawBytes = {
   type: 'tiktok.rawBytes',
   data: {
@@ -93,16 +106,12 @@ export type WorkerInfoEvent = {
 }
 
 export type PresenceRecord = {
-  user: Pick<
-      User,
-      'userId' | 'uniqueId' | 'nickname' | "profilePicture"
-  >,
+  user: Pick<User, 'displayId' | 'nickname' | "avatarLarge">,
   firstSeen: number, // First event where they were seen
   lastSeen: number // Last event where they were seen
 }
 
 export type PresenceRegistry = Record<string, PresenceRecord>;
-
 
 export type SyntheticLeaveMessage = {
   type: 'SyntheticLeaveMessage',
@@ -120,6 +129,7 @@ export type CustomData = RoomInfoEvent
     | SyntheticLeaveMessage
     | TikTokConnectEvent
     | TikTokDisconnectEvent
+    | RoomStatusEvent
     | SuperFanEvent
     | DecodeErrorEvent
     | TikTokRawBytes;
