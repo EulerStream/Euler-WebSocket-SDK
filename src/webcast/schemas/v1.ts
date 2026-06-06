@@ -1,1 +1,1 @@
-export * from 'tiktok-live-proto/v1';
+export * from 'tiktok-live-proto-full-types/v1';

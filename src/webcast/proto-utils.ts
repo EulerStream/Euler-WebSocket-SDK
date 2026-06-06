@@ -1,22 +1,23 @@
-import * as tiktokSchema from "tiktok-live-proto/v2";
-import {MessageFns} from "tiktok-live-proto/v2";
-import {ProtoMessageFetchResult, User, WebcastBarrageMessage, WebcastPushFrame} from "tiktok-live-proto/v3";
+import * as tiktokSchema from "tiktok-live-proto-full-types/v3";
+import {ProtoMessageFetchResult, User, WebcastBarrageMessage, WebcastPushFrame} from "tiktok-live-proto-full-types/v3";
 import {SchemaVersion} from "./schemas";
-import {ClientCloseCode, WebSocketFeatureFlagsType} from "../client";
+import {WebSocketFeatureFlagsType} from "../client";
+import {ClientCloseCode} from "../client/schemas";
 
-/** FUNCTION: Extract type T from MessageFns<T> **/
-type ExtractType<T> = T extends MessageFns<infer U> ? U : never;
+type HasCommon<T> = T extends { common: any } ? T : never;
+
+
+// Top-Level Messages
+export type WebcastEventMessage = {
+  [K in keyof WebcastMessage as HasCommon<WebcastMessage[K]> extends never ? never : K]: WebcastMessage[K];
+};
+
 
 /** FUNCTION: Extract only those message types that have a 'common' property **/
 type FilterMessagesWithCommon<T> = { [K in keyof T]: T[K] extends { common: any } ? K : never }[keyof T];
 
-/** MAP: Property names in tiktokSchema file to types **/
-type TikTokSchema = typeof tiktokSchema;
-
 /** MAP: Property names to T from ExtractType<T>. Includes 'nevers' that need to be filtered out  **/
-type RawExtractedTypes = {
-  [K in keyof TikTokSchema]: ExtractType<TikTokSchema[K]>;
-};
+type RawExtractedTypes = typeof tiktokSchema;
 
 /** UNION: All keys in RawExtractedTypes that DON'T result in a "never" **/
 type FilteredKeys = {
@@ -88,6 +89,29 @@ export type RoomStatusEvent = {
   }
 }
 
+export type TranscriptionEvent = {
+  type: 'transcription',
+  data: {
+    text: string
+    isFinal: boolean
+    language?: string
+    provider?: string
+    startTimeSeconds?: number
+    endTimeSeconds?: number
+    transcriptId?: string
+  }
+}
+
+export type TranscriptionStatusEvent = {
+  type: 'transcription.status',
+  data: {
+    state: 'starting' | 'connected' | 'reconnecting' | 'ended' | 'error' | string
+    provider?: string
+    message?: string
+    terminal?: boolean
+  }
+}
+
 export type TikTokRawBytes = {
   type: 'tiktok.rawBytes',
   data: {
@@ -130,6 +154,8 @@ export type CustomData = RoomInfoEvent
     | TikTokConnectEvent
     | TikTokDisconnectEvent
     | RoomStatusEvent
+    | TranscriptionEvent
+    | TranscriptionStatusEvent
     | SuperFanEvent
     | DecodeErrorEvent
     | TikTokRawBytes;

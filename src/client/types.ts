@@ -2,91 +2,26 @@ import {z} from "zod";
 import {SchemaVersion} from "../webcast/schemas";
 import {coerceBoolean, coerceNumber} from "../extras/zod-extra";
 import {DecodedData} from "../webcast/proto-utils";
+import {ClientCloseCode} from "./schemas";
 
-export enum ClientCloseCode {
-
-  /**
-   * Responding to a client's close request normally
-   */
-  NORMAL = 1000,
-
-  /**
-   * Error updating presence on connect, or upstream error on connect in the proxy.
-   */
-  INTERNAL_SERVER_ERROR = 1011,
-
-  /**
-   * Error fetching the /webcast/fetch endpoint for the socket
-   */
-  WEBCAST_FETCH_ERROR = 4556,
-
-  /**
-   * Error fetching the /webcast/room_info endpoint for the socket
-   */
-  ROOM_INFO_FETCH_ERROR = 4557,
-
-  /**
-   * TikTok closed the connected unexpectedly.
-   */
-  TIKTOK_CLOSED_CONNECTION = 4500,
-
-  /**
-   * The account has too many connections OR is connecting too quickly.
-   */
-  TOO_MANY_CONNECTIONS = 4429,
-
-  /**
-   * The client provided invalid context, such as an invalid uniqueId or JWT key.
-   */
-  INVALID_OPTIONS = 4400,
-
-  /**
-   * The requested streamer is not live.
-   */
-  NOT_LIVE = 4404,
-
-  /**
-   * The TikTok stream ended.
-   */
-  STREAM_END = 4005,
-
-  /**
-   * There were no messages in the timeout period, the WebSocket was assumed dead and closed.
-   */
-  NO_MESSAGES_TIMEOUT = 4006,
-
-  /**
-   * Invalid Auth
-   */
-  INVALID_AUTH = 4401,
-
-  /**
-   * Accessing a creator the JWT has no access to
-   */
-  NO_PERMISSION = 4403,
-
-  /**
-   * WebSocket exceeded 8 hour lifetime
-   */
-  MAX_LIFETIME_EXCEEDED = 4555,
-
-}
 
 // Short descriptions that can be sent over WebSocket close reason
 export const CloseMessageMap: Record<ClientCloseCode, string> = {
-  [ClientCloseCode.ROOM_INFO_FETCH_ERROR]: "Error fetching /webcast/room_info",
-  [ClientCloseCode.WEBCAST_FETCH_ERROR]: "Error fetching /webcast/fetch",
-  [ClientCloseCode.INVALID_AUTH]: "Invalid auth",
-  [ClientCloseCode.MAX_LIFETIME_EXCEEDED]: "Max lifetime exceeded",
-  [ClientCloseCode.NO_PERMISSION]: "No permission",
-  [ClientCloseCode.INTERNAL_SERVER_ERROR]: "Internal server error",
-  [ClientCloseCode.TIKTOK_CLOSED_CONNECTION]: "TikTok closed the connection unexpectedly",
-  [ClientCloseCode.TOO_MANY_CONNECTIONS]: "Too many concurrent connections",
-  [ClientCloseCode.INVALID_OPTIONS]: "Invalid context provided",
-  [ClientCloseCode.NOT_LIVE]: "Streamer is not live",
-  [ClientCloseCode.STREAM_END]: "TikTok stream ended",
-  [ClientCloseCode.NO_MESSAGES_TIMEOUT]: "No messages received in timeout period, closing WebSocket",
-  [ClientCloseCode.NORMAL]: "Normal closure"
+  [ClientCloseCode.UNRECOGNIZED]: "Unrecognized",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_UNSPECIFIED]: "Unspecified",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_ROOM_INFO_FETCH_ERROR]: "Error fetching /webcast/room_info",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_WEBCAST_FETCH_ERROR]: "Error fetching /webcast/fetch",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_INVALID_AUTH]: "Invalid auth",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_MAX_LIFETIME_EXCEEDED]: "Max lifetime exceeded",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_NO_PERMISSION]: "No permission",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_INTERNAL_SERVER_ERROR]: "Internal server error",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_TIKTOK_CLOSED_CONNECTION]: "TikTok closed the connection unexpectedly",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_TOO_MANY_CONNECTIONS]: "Too many concurrent connections",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_INVALID_OPTIONS]: "Invalid context provided",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_NOT_LIVE]: "Streamer is not live",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_STREAM_END]: "TikTok stream ended",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_NO_MESSAGES_TIMEOUT]: "No messages received in timeout period, closing WebSocket",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_NORMAL]: "Normal closure"
 }
 
 export const WebSocketFeatureFlags = z.object({
@@ -109,23 +44,6 @@ export const WebSocketFeatureFlags = z.object({
   normalizeUniqueId: coerceBoolean({default: true}),
 
   /**
-   * When enabled, the client will calculate presence information for users in the room.
-   * This enables us to give custom SyntheticJoinMessage and SyntheticLeaveMessage, a full presence system.
-   */
-  syntheticPresence: coerceBoolean({default: false}),
-
-  /**
-   * Configures how long a user must be inactive before we send a SyntheticLeaveMessage.
-   */
-  syntheticPresenceLeaveAfter: coerceNumber({default: 300, min: 60, max: 3600}),
-
-  /**
-   * Configures how long we can wait with NO messages coming from TikTok before we assume the WebSocket
-   * is dead and close it.
-   */
-  closeInactiveWebSocketAfter: coerceNumber({default: 60, min: 30, max: 3600}),
-
-  /**
    * The TikTok protobuf schema version to use for decoding messages.
    */
   schemaVersion: z.nativeEnum(SchemaVersion).default(SchemaVersion.v2),
@@ -144,6 +62,11 @@ export const WebSocketFeatureFlags = z.object({
    * Select the platform to connect with
    */
   webcastPlatform: z.enum(['mobile', 'web']).default('web'),
+
+  /**
+   * Whether to attach the WebSocket to the peer transcription stream.
+   */
+  enableTranscription: coerceBoolean({default: false}),
 
 });
 
@@ -168,5 +91,4 @@ export type ClientMessageBundle = {
   timestamp: number,
   messages: DecodedData[]
 }
-
 
