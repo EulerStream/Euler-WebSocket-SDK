@@ -61,7 +61,7 @@
     }
   },
   "scripts": {
-    "build": "pnpm run generate:schemas && tsdown --config-loader unconfig",
+    "build": "tsdown --config-loader unconfig",
     "clean": "rm -rf dist tmp",
     "generate": "pnpm run generate:schemas",
     "generate:schemas": "tsx ./scripts/generate-client-schemas.mts",
@@ -97,7 +97,7 @@
     "@bufbuild/protobuf": "^2.4.0",
     "eventemitter3": "^5.0.1",
     "fflate": "^0.8.2",
-    "tiktok-live-proto-full-types": "0.0.1",
+    "tiktok-live-proto-full-types": "0.2.0",
     "zod": "^3.25.34"
   },
   "devDependencies": {
