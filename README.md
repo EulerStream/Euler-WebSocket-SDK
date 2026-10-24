@@ -4,7 +4,7 @@ TypeScript SDK for the [Euler Stream](https://www.eulerstream.com) TikTok LIVE W
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white&style=flat-square)](https://www.linkedin.com/in/isaackogan/)
 [![Patrons](https://www.eulerstream.com/api/pips/patrons?v=002)](https://www.eulerstream.com/)
-![Connections](https://tiktok.eulerstream.com/analytics/pips/1)
+![Connections](https://tiktok.eulerstream.com/analytics/pips)
 ![Stars](https://img.shields.io/github/stars/EulerStream/Euler-WebSocket-SDK?style=flat&color=0274b5&alt=1)
 ![Issues](https://img.shields.io/github/issues/EulerStream/Euler-WebSocket-SDK)
 
