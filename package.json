@@ -10,6 +10,7 @@
   ],
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "browser": {
         "types": "./dist/web/index.d.ts",
         "default": "./dist/web/index.js"
@@ -20,6 +21,7 @@
       }
     },
     "./v1": {
+      "source": "./src/webcast/schemas/v1.ts",
       "browser": {
         "types": "./dist/web/v1.d.ts",
         "default": "./dist/web/v1.js"
@@ -30,6 +32,7 @@
       }
     },
     "./v2": {
+      "source": "./src/webcast/schemas/v2.ts",
       "browser": {
         "types": "./dist/web/v2.d.ts",
         "default": "./dist/web/v2.js"
@@ -40,6 +43,7 @@
       }
     },
     "./v3": {
+      "source": "./src/webcast/schemas/v3.ts",
       "browser": {
         "types": "./dist/web/v3.d.ts",
         "default": "./dist/web/v3.js"
@@ -50,6 +54,7 @@
       }
     },
     "./client/schemas": {
+      "source": "./src/client/schemas.ts",
       "browser": {
         "types": "./dist/web/client/schemas.d.ts",
         "default": "./dist/web/client/schemas.js"
