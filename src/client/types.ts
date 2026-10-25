@@ -19,6 +19,7 @@ export const CloseMessageMap: Record<ClientCloseCode, string> = {
   [ClientCloseCode.CLIENT_CLOSE_CODE_TOO_MANY_CONNECTIONS]: "Too many concurrent connections",
   [ClientCloseCode.CLIENT_CLOSE_CODE_INVALID_OPTIONS]: "Invalid context provided",
   [ClientCloseCode.CLIENT_CLOSE_CODE_NOT_LIVE]: "Streamer is not live",
+  [ClientCloseCode.CLIENT_CLOSE_CODE_KEEPALIVE_TIMEOUT]: "No response to keepalive pings, closing WebSocket",
   [ClientCloseCode.CLIENT_CLOSE_CODE_STREAM_END]: "TikTok stream ended",
   [ClientCloseCode.CLIENT_CLOSE_CODE_NO_MESSAGES_TIMEOUT]: "No messages received in timeout period, closing WebSocket",
   [ClientCloseCode.CLIENT_CLOSE_CODE_NORMAL]: "Normal closure"
